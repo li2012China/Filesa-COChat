@@ -1,5 +1,11 @@
 # Filesa COChat
-
+<p align="center">
+        <a href="https://flowlauncher.com">
+        	<img src="https://user-images.githubusercontent.com/6903107/207167068-2196d2a3-2caa-4856-958b-a780fbda95c6.gif" width="500">
+        </a><br />
+        <img src="https://user-images.githubusercontent.com/6903107/207168016-85d0dd16-1f3b-4d42-9d37-0e0d5a596ead.png" width="400">
+        
+</p>
 一个基于Python和Tkinter的轻量级局域网聊天软件，**无需专用服务器**即可实现多人实时通信。
 
 

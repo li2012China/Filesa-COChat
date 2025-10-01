@@ -726,11 +726,11 @@
     <div class="github-stats">
       <div class="github-stat">
         <i class="fab fa-github"></i>
-        <span id="github-stars">加载中...</span> stars
+        <span id="github-stars">加载中...</span> 星标
       </div>
       <div class="github-stat">
         <i class="fas fa-code-branch"></i>
-        <span id="github-forks">加载中...</span> forks
+        <span id="github-forks">加载中...</span> 分支
       </div>
     </div>
   </header>
@@ -803,7 +803,7 @@
     </section>
     
     <div class="footer">
-      <p>© 2025 YF-Cloud</p>
+      <p>©By li2012China 2023-2025 --- Filesa and COChat</p>
     </div>
   </div>
 
@@ -913,7 +913,7 @@
               `).join('')}
             </ul>
             <button class="submit-button toggle-assets">
-              <i class="fas fa-layer-group"></i> 显示资源
+              <i class="fas fa-layer-group"></i> 显示下载
             </button>
           </div>
         `).join('');
@@ -928,8 +928,8 @@
             const assetsList = this.previousElementSibling;
             assetsList.style.display = assetsList.style.display === 'none' ? 'block' : 'none';
             this.innerHTML = assetsList.style.display === 'none' ? 
-              '<i class="fas fa-layer-group"></i> 显示资源' : 
-              '<i class="fas fa-layer-group"></i> 隐藏资源';
+              '<i class="fas fa-layer-group"></i> 显示下载' : 
+              '<i class="fas fa-layer-group"></i> 隐藏下载';
           });
         });
       } catch (error) {

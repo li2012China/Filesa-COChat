@@ -1,8 +1,14 @@
 <p align="center">
         <img src="https://github.com/li2012China/Filesa-COChat/blob/9f4654acf5ac7794e80627277d732c7c4877a571/web/coccbbig.png" width="400">
 </p>
-
-一个基于Python和Tkinter的轻量级局域网聊天软件，**无需专用服务器**即可实现多人实时通信。
+<p align="center">
+        <a href="https://github.com/li2012China/Filesa-COChat/releases/latest"><img src="https://img.shields.io/github/v/release/li2012China/Filesa-COChat"></a>
+        <img src="https://img.shields.io/github/release-date/li2012China/Filesa-COChat">
+        <a href="https://github.com/li2012China/Filesa-COChat/releases"><img src="https://img.shields.io/github/downloads/li2012China/Filesa-COChat/total.svg"></a>
+</p>
+<p align="center">
+        一个基于Python和Tkinter的轻量级局域网聊天软件，无需专用服务器即可实现多人实时通信。
+</p>
 
 ## 功能特点
 

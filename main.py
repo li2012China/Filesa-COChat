@@ -11,6 +11,7 @@ from datetime import datetime
 import os
 from PIL import ImageTk, Image
 import traceback
+import math
 
 class PopupNotification:
     """简化的弹窗通知类，用于显示聊天消息"""
@@ -320,6 +321,9 @@ class FilesaCOChat:
         # 版本信息
         self.version = "4.0"
         
+        # 通知设置
+        self.notifications_enabled = True
+        
         # 用于线程间通信的队列
         self.message_queue = queue.Queue()
         
@@ -337,6 +341,10 @@ class FilesaCOChat:
         self.root.geometry("700x500")  # 增加宽度以容纳用户列表
         self.root.resizable(True, True)
         
+        # 设置窗口图标
+        icon_path = os.path.join(self.base_dir, "image", "icon.ico")
+        self.root.iconbitmap(icon_path)
+        
         # 初始化弹窗通知系统
         self.popup_notifier = PopupNotification(self.root)
         
@@ -353,7 +361,8 @@ class FilesaCOChat:
             self.progress_frame, 
             orient=tk.HORIZONTAL, 
             length=300, 
-            mode='indeterminate'
+            mode='determinate',
+            maximum=100
         )
         self.progress_bar.pack(pady=5, padx=10, fill=tk.X)
         
@@ -659,7 +668,7 @@ class FilesaCOChat:
         total_ips = len(network_ips)
         
         if total_ips == 0:
-            self.progress_bar.stop()
+            self.progress_bar['value'] = 0
             self.update_progress(100, 100, "未找到可扫描的IP地址")
             return None
         
@@ -679,7 +688,7 @@ class FilesaCOChat:
         self.scan_complete.wait(timeout=5)
         
         # 停止滑动动画
-        self.progress_bar.stop()
+        self.progress_bar['value'] = 0
         
         if server_ip:
             self.update_progress(100, 100, f"通过扫描发现聊天室: {server_ip}")
@@ -690,17 +699,30 @@ class FilesaCOChat:
     
     def update_scan_progress(self, total_ips):
         """更新扫描进度（在多线程中运行）"""
-        # 对于滑动进度条，只需要显示"请稍后"即可
+        # 对于非线性滑动进度条，使用自定义动画
         self.update_progress(0, 100, "请稍后")
         
-        # 启动滑动动画
-        self.progress_bar.start()
-        
+        # 实现非线性滑动效果
+        start_time = time.time()
         checked_ips = 0
         
         while checked_ips < total_ips and self.running and not self.found_server:
+            # 计算经过的时间
+            elapsed_time = time.time() - start_time
+            
+            # 使用正弦函数创建非线性进度（0-1-0的循环）
+            # 将时间映射到0-π范围，产生0-1-0的平滑曲线
+            sine_progress = (1 - math.cos(elapsed_time * 2)) / 2  # 2控制速度
+            
+            # 将进度映射到0-100范围
+            progress_value = int(sine_progress * 100)
+            
+            # 更新进度条
+            self.progress_bar['value'] = progress_value
+            self.root.update_idletasks()
+            
             # 短暂延迟，避免过度更新
-            time.sleep(0.1)
+            time.sleep(0.05)
             checked_ips += 1
     
     def search_chatroom_thread(self):
@@ -1163,7 +1185,7 @@ class FilesaCOChat:
         self.chat_area.see(tk.END)
         
         # 显示弹窗通知
-        if username != self.username:
+        if username != self.username and self.notifications_enabled:
             # 限制消息长度，避免弹窗显示不全
             display_message = message[:30] + "..." if len(message) > 30 else message
             
@@ -1191,6 +1213,10 @@ class FilesaCOChat:
         # 字体设置选项卡
         font_tab = ttk.Frame(tab_control)
         tab_control.add(font_tab, text='字体设置')
+        
+        # 通知选项卡
+        notification_tab = ttk.Frame(tab_control)
+        tab_control.add(notification_tab, text='通知')
         
         # 关于选项卡
         about_tab = ttk.Frame(tab_control)
@@ -1396,6 +1422,33 @@ class FilesaCOChat:
         thanks_text.insert(tk.END, "6. Message-Pop-UP - 提供了消息弹窗功能支持\n\n")
         thanks_text.insert(tk.END, "没有你们的支持，就没有 Filesa COChat 的今天！")
         thanks_text.config(state='disabled')
+    
+        # 通知选项卡内容
+        notification_frame = ttk.LabelFrame(notification_tab, text="通知设置")
+        notification_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # 弹窗通知开关
+        notification_var = tk.BooleanVar(value=self.notifications_enabled)
+        
+        def toggle_notification():
+            self.notifications_enabled = notification_var.get()
+        
+        notification_check = ttk.Checkbutton(
+            notification_frame, 
+            text="启用消息弹窗通知",
+            variable=notification_var,
+            command=toggle_notification
+        )
+        notification_check.pack(padx=10, pady=20, anchor="w")
+        
+        # 说明文本
+        note_label = ttk.Label(
+            notification_frame, 
+            text="当收到新消息时，是否在屏幕右下角显示弹窗通知。",
+            foreground="#666666",
+            wraplength=500
+        )
+        note_label.pack(padx=10, pady=5, anchor="w")
     
     def apply_font_settings(self, font_name, font_size, is_bold):
         """应用字体设置"""

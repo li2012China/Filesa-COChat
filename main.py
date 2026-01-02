@@ -7,9 +7,294 @@ import time
 import queue
 import logging
 import random
+from datetime import datetime
+import os
+from PIL import ImageTk, Image
+import traceback
+
+class PopupNotification:
+    """简化的弹窗通知类，用于显示聊天消息"""
+    THEMES = {
+        'Light': {
+            'bg': '#FFFFFF',
+            'fg_title': '#333333',
+            'fg_msg': '#666666',
+            'fg_time': '#999999'
+        }
+    }
+
+    def __init__(self, root):
+        # 获取程序所在目录
+        self.base_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        self.message_count = 0
+        self.active_popups = []
+        self.root = root  # 使用现有的root窗口，避免创建新的Tk实例
+        self.max_messages = 5
+        self.current_theme = 'Light'
+        self.app_icons = {}  # 缓存应用图标
+        
+        # 启动定期刷新弹窗位置的定时器
+        self.start_position_refresh()
+        
+        # 预加载主题图标
+        self.load_theme_icons()
+
+    def load_theme_icons(self):
+        """预加载当前主题的所有应用图标"""
+        # 图标现在存放在image目录下
+        icon_dir = os.path.join(self.base_dir, 'image')
+        print(f"[DEBUG] 正在从目录加载图标: {icon_dir}")
+        
+        # 加载消息图标
+        app = 'message'
+        icon_name = f"{app}-{self.current_theme}.png"
+        icon_path = os.path.join(icon_dir, icon_name)
+        
+        try:
+            img = Image.open(icon_path).resize((40, 40))
+            self.app_icons[app] = ImageTk.PhotoImage(img)
+            print(f"[DEBUG] 成功加载图标: {icon_name}")
+        except Exception as e:
+            print(f"[ERROR] 加载图标失败: {e}")
+            self.app_icons[app] = self.create_default_icon(app)
+        
+        # 加载join和left图标
+        for icon_type in ['join', 'left']:
+            icon_name = f"{icon_type}.png"
+            icon_path = os.path.join(icon_dir, icon_name)
+            
+            try:
+                img = Image.open(icon_path).resize((40, 40))
+                self.app_icons[icon_type] = ImageTk.PhotoImage(img)
+                print(f"[DEBUG] 成功加载图标: {icon_name}")
+            except Exception as e:
+                print(f"[ERROR] 加载图标失败: {e}")
+                # 如果加载失败，使用默认图标
+                self.app_icons[icon_type] = self.create_default_icon(icon_type)
+
+    def create_default_icon(self, app_type):
+        """创建默认图标"""
+        color = '#4CAF50'  # 绿色
+        
+        # 创建一个简单的带文字的默认图标
+        img = Image.new('RGB', (40, 40), color=color)
+        return ImageTk.PhotoImage(img)
+
+    def get_app_icon(self, app_type):
+        """获取应用图标"""
+        return self.app_icons.get(app_type, self.create_default_icon('message'))
+
+    def create_popup(self, title, message, icon_type='message'):
+        """创建弹窗"""
+        popup = tk.Toplevel(self.root)
+        popup.overrideredirect(True)
+        popup.attributes('-alpha', 0)
+        popup.attributes('-topmost', True)
+        popup.attributes('-transparentcolor', '#f0f0f0')
+        popup.geometry("320x80+1000+100")
+
+        theme = self.THEMES[self.current_theme]
+        frame = tk.Frame(popup, bg=theme['bg'], bd=0, highlightthickness=0)
+        frame.place(x=0, y=0, width=320, height=80)
+
+        # 应用图标
+        icon_img = self.get_app_icon(icon_type)
+        icon_label = tk.Label(frame, image=icon_img, bg=theme['bg'])
+        icon_label.image = icon_img
+        icon_label.place(x=15, y=20)
+
+        # 应用标题
+        title_label = tk.Label(frame, text=title, bg=theme['bg'], 
+                             fg=theme['fg_title'], font=('Microsoft YaHei', 12, 'bold'), 
+                             anchor='w')
+        title_label.place(x=70, y=15)
+
+        # 消息内容
+        msg_label = tk.Label(frame, text=message, bg=theme['bg'], 
+                           fg=theme['fg_msg'], font=('Microsoft YaHei', 10))
+        msg_label.place(x=70, y=40)
+
+        # 时间
+        time_str = datetime.now().strftime("%H:%M")
+        time_label = tk.Label(frame, text=time_str, bg=theme['bg'], 
+                            fg=theme['fg_time'], font=('Microsoft YaHei', 8))
+        time_label.place(x=250, y=15)
+
+        # 添加细边框增强视觉效果
+        border_frame = tk.Frame(popup, bg='#DDDDDD', bd=0)
+        border_frame.place(x=0, y=0, width=320, height=80, relwidth=1, relheight=1)
+        frame.lift()
+
+        # 添加点击事件，点击弹窗时将主窗口显示在最前面并关闭弹窗
+        def on_popup_click(event):
+            # 激活主窗口
+            self.root.deiconify()
+            self.root.lift()
+            self.root.focus_force()
+            
+            # 查找弹窗在列表中的索引
+            popup_index = -1
+            for i, (p, _) in enumerate(self.active_popups):
+                if p == popup:
+                    popup_index = i
+                    break
+            
+            # 关闭弹窗并重新排列
+            if popup_index != -1:
+                popup.destroy()
+                self.reposition_after_hide(popup_index)
+
+        # 为弹窗的各个组件添加点击事件
+        for widget in [popup, frame, icon_label, title_label, msg_label, time_label]:
+            widget.bind('<Button-1>', on_popup_click)
+
+        return popup, frame
+
+    def show_animation(self, popup, index):
+        """显示弹窗动画"""
+        screen_width = self.root.winfo_screenwidth()
+        target_x = screen_width - 340
+        base_y = 20
+        spacing = 85
+
+        popup.geometry(f"320x80+{screen_width}+{base_y + index * spacing}")
+        popup.deiconify()
+
+        start_time = datetime.now().timestamp()
+        duration = 250  # 动画持续时间(毫秒)
+
+        def animate():
+            elapsed = (datetime.now().timestamp() - start_time) * 1000
+            progress = min(elapsed / duration, 1.0)
+            
+            # 平滑移动动画
+            current_x = int(screen_width - (screen_width - target_x) * progress)
+            popup.geometry(f"320x80+{current_x}+{base_y + index * spacing}")
+            popup.attributes('-alpha', progress)
+
+            # 挤压下方消息效果
+            if index > 0:
+                for i in range(index):
+                    offset = int(5 * (1 - progress))
+                    if i < len(self.active_popups):
+                        self.active_popups[i][0].geometry(
+                            f"320x80+{target_x}+{base_y + i * spacing + offset}"
+                        )
+
+            if progress < 1.0:
+                popup.after(16, animate)
+            else:
+                # 5秒后开始隐藏动画
+                popup.after(5000, lambda: self.hide_animation(popup, index))
+
+        animate()
+
+    def hide_animation(self, popup, index):
+        """隐藏弹窗动画"""
+        screen_width = self.root.winfo_screenwidth()
+        base_y = 20
+        spacing = 85
+        start_x = screen_width - 340
+
+        start_time = datetime.now().timestamp()
+        duration = 250  # 动画持续时间(毫秒)
+
+        def animate():
+            elapsed = (datetime.now().timestamp() - start_time) * 1000
+            progress = min(elapsed / duration, 1.0)
+            
+            # 向右滑出动画
+            current_x = int(start_x + 320 * progress)
+            popup.geometry(f"320x80+{current_x}+{base_y + index * spacing}")
+            popup.attributes('-alpha', 1 - progress)
+
+            # 下方消息上移效果
+            if index < len(self.active_popups) - 1:
+                for i in range(index + 1, len(self.active_popups)):
+                    offset = int(5 * progress)
+                    if i < len(self.active_popups):
+                        self.active_popups[i][0].geometry(
+                            f"320x80+{screen_width - 340}+{base_y + i * spacing - offset}"
+                        )
+
+            if progress < 1.0:
+                popup.after(16, animate)
+            else:
+                popup.destroy()
+                self.reposition_after_hide(index)
+
+        animate()
+
+    def reposition_after_hide(self, removed_index):
+        """消息消失后重新排列剩余消息"""
+        screen_width = self.root.winfo_screenwidth()
+        base_y = 20
+        spacing = 85
+        
+        # 过滤掉已销毁的弹窗
+        self.active_popups = [p for p in self.active_popups if p[0].winfo_exists()]
+        
+        # 重新定位所有消息
+        for i, (popup, _) in enumerate(self.active_popups):
+            target_y = base_y + i * spacing
+            popup.geometry(f"320x80+{screen_width - 340}+{target_y}")
+    
+    def refresh_popup_positions(self):
+        """刷新所有弹窗的位置"""
+        screen_width = self.root.winfo_screenwidth()
+        base_y = 20
+        spacing = 85
+        
+        # 过滤掉已销毁的弹窗
+        self.active_popups = [p for p in self.active_popups if p[0].winfo_exists()]
+        
+        # 重新定位所有消息
+        for i, (popup, _) in enumerate(self.active_popups):
+            target_y = base_y + i * spacing
+            popup.geometry(f"320x80+{screen_width - 340}+{target_y}")
+    
+    def start_position_refresh(self):
+        """启动定期刷新弹窗位置的定时器"""
+        def refresh_timer():
+            self.refresh_popup_positions()
+            # 每200毫秒刷新一次
+            self.root.after(200, refresh_timer)
+        
+        # 立即执行一次，然后启动定时器
+        self.refresh_popup_positions()
+        self.root.after(200, refresh_timer)
+
+    def show_message(self, title, message, icon_type='message'):
+        """显示弹窗消息"""
+        self.message_count += 1
+        
+        # 移除最旧的消息如果达到上限
+        if len(self.active_popups) >= self.max_messages:
+            oldest_popup = self.active_popups.pop()
+            oldest_popup[0].destroy()
+
+        # 创建新弹窗
+        popup, frame = self.create_popup(title, message, icon_type)
+        self.active_popups.insert(0, (popup, frame))
+        
+        # 立即调整所有现有弹窗的位置
+        screen_width = self.root.winfo_screenwidth()
+        base_y = 20
+        spacing = 85
+        
+        for i, (p, _) in enumerate(self.active_popups):
+            if p != popup:  # 跳过新创建的弹窗，它会通过动画进入
+                p.geometry(f"320x80+{screen_width - 340}+{base_y + i * spacing}")
+        
+        # 显示动画
+        self.show_animation(popup, 0)
 
 class FilesaCOChat:
     def __init__(self):
+        # 获取程序所在目录
+        self.base_dir = os.path.dirname(os.path.abspath(__file__))
+        
         self.host = self.get_local_ip()
         self.port = 11451
         self.username = None
@@ -33,7 +318,7 @@ class FilesaCOChat:
         self.user_list_font = ("Arial", 9)
         
         # 版本信息
-        self.version = "3.0"
+        self.version = "4.0"
         
         # 用于线程间通信的队列
         self.message_queue = queue.Queue()
@@ -52,6 +337,9 @@ class FilesaCOChat:
         self.root.geometry("700x500")  # 增加宽度以容纳用户列表
         self.root.resizable(True, True)
         
+        # 初始化弹窗通知系统
+        self.popup_notifier = PopupNotification(self.root)
+        
         # 创建主框架
         self.main_frame = tk.Frame(self.root)
         self.main_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
@@ -65,7 +353,7 @@ class FilesaCOChat:
             self.progress_frame, 
             orient=tk.HORIZONTAL, 
             length=300, 
-            mode='determinate'
+            mode='indeterminate'
         )
         self.progress_bar.pack(pady=5, padx=10, fill=tk.X)
         
@@ -149,9 +437,83 @@ class FilesaCOChat:
         )
         self.user_count_label.pack(fill=tk.X, side=tk.BOTTOM)
         
-        # 初始显示进度条框架
-        self.progress_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
-        self.chat_frame.pack_forget()  # 隐藏聊天界面
+        # 创建登录界面框架
+        self.login_frame = tk.Frame(self.main_frame)
+        self.login_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+        
+        # 登录界面logo
+        try:
+            # 从image目录加载logo.png，保持原始比例
+            logo_path = os.path.join(self.base_dir, 'image', 'logo.png')
+            logo_image = Image.open(logo_path)
+            
+            # 获取原始尺寸
+            original_width, original_height = logo_image.size
+            
+            # 计算合适的缩放比例，最大宽度和高度为200
+            max_size = 200
+            if original_width > original_height:
+                # 按宽度缩放
+                scale_factor = max_size / original_width
+            else:
+                # 按高度缩放
+                scale_factor = max_size / original_height
+            
+            # 计算新尺寸，保持原始比例
+            new_width = int(original_width * scale_factor)
+            new_height = int(original_height * scale_factor)
+            
+            # 缩放图片
+            logo_image = logo_image.resize((new_width, new_height))
+            self.logo_photo = ImageTk.PhotoImage(logo_image)
+            
+            logo_label = tk.Label(
+                self.login_frame, 
+                image=self.logo_photo
+            )
+            logo_label.pack(pady=20)
+        except Exception as e:
+            print(f"[ERROR] 加载logo失败: {e}")
+            # 如果加载失败，显示文字标题
+            login_title = tk.Label(
+                self.login_frame, 
+                text="Filesa COChat", 
+                font=('Microsoft YaHei', 24, 'bold')
+            )
+            login_title.pack(pady=30)
+        
+        # 用户名标签
+        username_label = tk.Label(
+            self.login_frame, 
+            text="用户名:", 
+            font=('Microsoft YaHei', 12)
+        )
+        username_label.pack(pady=10)
+        
+        # 用户名输入框
+        self.username_entry = tk.Entry(
+            self.login_frame, 
+            font=('Microsoft YaHei', 12),
+            width=30
+        )
+        self.username_entry.pack(pady=10)
+        self.username_entry.bind('<Return>', self.login)
+        
+        # 登录按钮
+        self.login_button = tk.Button(
+            self.login_frame, 
+            text="登录", 
+            command=self.login,
+            font=('Microsoft YaHei', 12),
+            width=15,
+            height=2
+        )
+        self.login_button.pack(pady=20)
+        
+        # 初始显示登录界面，隐藏其他界面
+        self.login_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+        self.progress_frame.pack_forget()
+        self.chat_frame.pack_forget()
     
     def get_local_ip(self):
         """获取本机在局域网中的IP地址"""
@@ -289,7 +651,7 @@ class FilesaCOChat:
             return server_ip
         
         # 如果广播失败，使用多线程扫描
-        self.update_progress(10, 100, "广播未发现聊天室，开始多线程扫描...")
+        self.update_progress(10, 100, "广播未发现聊天室，开始扫描...")
         
         network_ips = self.get_network_ips()
         # 排除自己的IP
@@ -297,6 +659,7 @@ class FilesaCOChat:
         total_ips = len(network_ips)
         
         if total_ips == 0:
+            self.progress_bar.stop()
             self.update_progress(100, 100, "未找到可扫描的IP地址")
             return None
         
@@ -315,8 +678,11 @@ class FilesaCOChat:
         # 等待扫描完成或超时
         self.scan_complete.wait(timeout=5)
         
+        # 停止滑动动画
+        self.progress_bar.stop()
+        
         if server_ip:
-            self.update_progress(100, 100, f"通过多线程扫描发现聊天室: {server_ip}")
+            self.update_progress(100, 100, f"通过扫描发现聊天室: {server_ip}")
             return server_ip
         else:
             self.update_progress(100, 100, "扫描完成，未找到现有聊天室")
@@ -324,13 +690,15 @@ class FilesaCOChat:
     
     def update_scan_progress(self, total_ips):
         """更新扫描进度（在多线程中运行）"""
+        # 对于滑动进度条，只需要显示"请稍后"即可
+        self.update_progress(0, 100, "请稍后")
+        
+        # 启动滑动动画
+        self.progress_bar.start()
+        
         checked_ips = 0
         
         while checked_ips < total_ips and self.running and not self.found_server:
-            # 基于实际完成的IP数量更新进度
-            progress = min(90, int(checked_ips / total_ips * 80))  # 80%用于扫描
-            self.update_progress(10 + progress, 100, f"多线程扫描中... ({checked_ips}/{total_ips})")
-            
             # 短暂延迟，避免过度更新
             time.sleep(0.1)
             checked_ips += 1
@@ -793,13 +1161,27 @@ class FilesaCOChat:
         self.chat_area.insert(tk.END, f"[{username}] {message}\n")
         self.chat_area.config(state='disabled')
         self.chat_area.see(tk.END)
+        
+        # 显示弹窗通知
+        if username != self.username:
+            # 限制消息长度，避免弹窗显示不全
+            display_message = message[:30] + "..." if len(message) > 30 else message
+            
+            # 根据消息内容选择合适的图标
+            icon_type = 'message'
+            if "加入了聊天室" in message:
+                icon_type = 'join'
+            elif "离开了聊天室" in message:
+                icon_type = 'left'
+            
+            self.popup_notifier.show_message(username, display_message, icon_type)
     
     def open_settings(self):
         """打开设置窗口"""
         settings_window = tk.Toplevel(self.root)
         settings_window.title("设置")
-        settings_window.geometry("400x300")
-        settings_window.resizable(False, False)
+        settings_window.geometry("600x400")
+        settings_window.resizable(True, True)
         settings_window.transient(self.root)  # 设置为模态窗口
         settings_window.grab_set()  # 捕获所有事件
         
@@ -813,6 +1195,10 @@ class FilesaCOChat:
         # 关于选项卡
         about_tab = ttk.Frame(tab_control)
         tab_control.add(about_tab, text='关于')
+        
+        # 鸣谢选项卡
+        thanks_tab = ttk.Frame(tab_control)
+        tab_control.add(thanks_tab, text='鸣谢')
         
         tab_control.pack(expand=1, fill="both", padx=10, pady=10)
         
@@ -913,12 +1299,23 @@ class FilesaCOChat:
         about_frame = ttk.LabelFrame(about_tab, text="软件信息")
         about_frame.pack(fill="both", expand=True, padx=10, pady=10)
         
-        # 软件名称
+        # 软件名称（可点击链接）
         name_label = ttk.Label(about_frame, text="软件名称:")
         name_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
         
-        name_value = ttk.Label(about_frame, text="Filesa COChat")
+        # 创建可点击的软件名称
+        def open_github():
+            import webbrowser
+            webbrowser.open("https://github.com/li2012China/Filesa-COChat")
+        
+        name_value = ttk.Label(
+            about_frame, 
+            text="Filesa COChat",
+            foreground="blue",
+            cursor="hand2"
+        )
         name_value.grid(row=0, column=1, padx=10, pady=5, sticky="w")
+        name_value.bind("<Button-1>", lambda e: open_github())
         
         # 版本号
         version_label = ttk.Label(about_frame, text="版本号:")
@@ -927,18 +1324,31 @@ class FilesaCOChat:
         version_value = ttk.Label(about_frame, text=self.version)
         version_value.grid(row=1, column=1, padx=10, pady=5, sticky="w")
         
-        # 开发者
+        # 开发者（可点击链接）
         developer_label = ttk.Label(about_frame, text="开发者:")
         developer_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
         
-        developer_value = ttk.Label(about_frame, text="li2012China")
+        # 创建可点击的开发者名称
+        def open_developer_github():
+            import webbrowser
+            webbrowser.open("https://github.com/li2012China")
+        
+        developer_value = ttk.Label(
+            about_frame, 
+            text="li2012China",
+            foreground="blue",
+            cursor="hand2"
+        )
         developer_value.grid(row=2, column=1, padx=10, pady=5, sticky="w")
+        developer_value.bind("<Button-1>", lambda e: open_developer_github())
         
         # 版权信息
         copyright_label = ttk.Label(about_frame, text="版权:")
         copyright_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
         
-        copyright_value = ttk.Label(about_frame, text="© 2025 Filesa COChat. 保留所有权利。")
+        # 使用当前年份
+        current_year = datetime.now().year
+        copyright_value = ttk.Label(about_frame, text=f"© {current_year} Filesa COChat. 保留所有权利。")
         copyright_value.grid(row=3, column=1, padx=10, pady=5, sticky="w")
         
         # 描述
@@ -959,6 +1369,33 @@ class FilesaCOChat:
         desc_text.config(state='normal')
         desc_text.insert(tk.END, "Filesa COChat 是一个基于局域网的多人实时聊天软件，支持个性化字体，最重要的是无需服务端！")
         desc_text.config(state='disabled')
+    
+        # 鸣谢选项卡内容
+        thanks_frame = ttk.LabelFrame(thanks_tab, text="鸣谢")
+        thanks_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # 鸣谢信息
+        thanks_label = ttk.Label(thanks_frame, text="感谢所有为 Filesa COChat 做出贡献的开发者和用户！")
+        thanks_label.pack(padx=10, pady=10, anchor="w")
+        
+        thanks_text = tk.Text(
+            thanks_frame, 
+            height=10, 
+            width=50,
+            wrap=tk.WORD,
+            state='disabled'
+        )
+        thanks_text.pack(fill="both", expand=True, padx=10, pady=5)
+        thanks_text.config(state='normal')
+        thanks_text.insert(tk.END, "特别感谢：\n\n")
+        thanks_text.insert(tk.END, "1. 所有测试用户 - 感谢你们的反馈和建议\n")
+        thanks_text.insert(tk.END, "2. 开源社区 - 提供了很多优秀的工具和库\n")
+        thanks_text.insert(tk.END, "3. Python 社区 - 提供了强大的编程语言和生态系统\n")
+        thanks_text.insert(tk.END, "4. Tkinter 库 - 提供了跨平台的 GUI 开发支持\n")
+        thanks_text.insert(tk.END, "5. Pillow 库 - 提供了强大的图像处理功能\n")
+        thanks_text.insert(tk.END, "6. Message-Pop-UP - 提供了消息弹窗功能支持\n\n")
+        thanks_text.insert(tk.END, "没有你们的支持，就没有 Filesa COChat 的今天！")
+        thanks_text.config(state='disabled')
     
     def apply_font_settings(self, font_name, font_size, is_bold):
         """应用字体设置"""
@@ -1017,14 +1454,16 @@ class FilesaCOChat:
                 self.root.destroy()
                 return
     
-    def start(self):
-        """启动聊天软件"""
-        # 获取用户名
-        self.username = simpledialog.askstring("用户名", "请输入您的用户名:", parent=self.root)
+    def login(self, event=None):
+        """处理登录逻辑"""
+        self.username = self.username_entry.get().strip()
         if not self.username:
             messagebox.showwarning("警告", "必须输入用户名")
-            self.root.destroy()
             return
+        
+        # 隐藏登录界面，显示进度条
+        self.login_frame.pack_forget()
+        self.progress_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
         
         # 启动队列处理
         self.root.after(100, self.process_queue)
@@ -1033,7 +1472,9 @@ class FilesaCOChat:
         search_thread = threading.Thread(target=self.search_chatroom_thread)
         search_thread.daemon = True
         search_thread.start()
-        
+    
+    def start(self):
+        """启动聊天软件"""
         # 启动GUI主循环
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.mainloop()

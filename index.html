@@ -71,48 +71,6 @@
       --icon-size-lg: 32px;
     }
 
-    /* 暗色主题 */
-    [data-theme="dark"] {
-      --primary: #A8C8FF;
-      --on-primary: #003059;
-      --primary-container: #00497E;
-      --on-primary-container: #D3E5FF;
-      
-      --secondary: #BBC7DB;
-      --on-secondary: #253140;
-      --secondary-container: #3B4858;
-      --on-secondary-container: #D7E3F7;
-      
-      --surface: #121316;
-      --on-surface: #E2E2E5;
-      --surface-variant: #43474E;
-      --on-surface-variant: #C4C6D0;
-      
-      --background: #121316;
-      --on-background: #E2E2E5;
-      
-      --outline: #8E9199;
-      --outline-variant: #43474E;
-      
-      --error: #FFB4AB;
-      --on-error: #690005;
-      --error-container: #93000A;
-      --on-error-container: #FFDAD6;
-      
-      --success: #88D8BF;
-      --on-success: #00382A;
-      --success-container: #00503F;
-      --on-success-container: #A6F2DB;
-      
-      --warning: #FFDC48;
-      --on-warning: #3D3000;
-      --warning-container: #5F4E00;
-      --on-warning-container: #FFE9A3;
-      
-      --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.3);
-      --elevation-2: 0 2px 6px rgba(0, 0, 0, 0.2), 0 3px 6px rgba(0, 0, 0, 0.3);
-      --elevation-3: 0 4px 12px rgba(0, 0, 0, 0.2), 0 6px 12px rgba(0, 0, 0, 0.3);
-    }
 
     * {
       margin: 0;
@@ -182,74 +140,6 @@
       font-size: 2.5rem;
       margin-bottom: var(--spacing-sm);
     }
-
-    .theme-switcher {
-      position: fixed;
-      top: var(--spacing-md);
-      right: var(--spacing-md);
-      z-index: 1000;
-      display: flex;
-      gap: var(--spacing-sm);
-    }
-
-    .theme-toggle {
-      position: relative;
-      width: 48px;
-      height: 24px;
-      background: var(--surface-variant);
-      border-radius: var(--radius-xxl);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      padding: 2px;
-      transition: background-color var(--transition);
-    }
-    
-    .theme-toggle::before {
-      content: '';
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: var(--primary);
-      left: 2px;
-      transition: transform var(--transition);
-    }
-    
-    [data-theme="dark"] .theme-toggle::before {
-      transform: translateX(24px);
-    }
-    
-    .theme-icon {
-      position: relative;
-      z-index: 1;
-      font-size: var(--icon-size-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 20px;
-      height: 20px;
-      color: var(--on-primary);
-    }
-    
-    .light-icon {
-      opacity: 1;
-      transition: opacity var(--transition);
-    }
-    
-    .dark-icon {
-      opacity: 0;
-      transition: opacity var(--transition);
-    }
-    
-    [data-theme="dark"] .light-icon {
-      opacity: 0;
-    }
-    
-    [data-theme="dark"] .dark-icon {
-      opacity: 1;
-    }
-
     .card {
       background: var(--surface);
       border-radius: var(--radius-xl);
@@ -710,13 +600,6 @@
   </style>
 </head>
 <body>
-  <div class="theme-switcher">
-    <div class="theme-toggle" onclick="toggleTheme()">
-      <span class="theme-icon light-icon"><i class="fas fa-sun"></i></span>
-      <span class="theme-icon dark-icon"><i class="fas fa-moon"></i></span>
-    </div>
-  </div>
-
   <header>
     <div class="logo">
       <div class="logo-icon">
@@ -746,7 +629,7 @@
     </div>
 
     <div class="card">
-      <h2 class="section-title"><i class="fas fa-comments"></i> 社区讨论</h2>
+      <h2 class="section-title"><i class="fas fa-comments"></i> 议题与漏洞</h2>
       <div class="discussion-grid">
         <div class="quick-create">
           <input type="text" id="issueTitle" 
@@ -777,25 +660,7 @@
     </div>
   </div>
 
-  <script>
-    // 新增主题功能
-    function toggleTheme() {
-      const currentTheme = document.body.getAttribute('data-theme') || 'light';
-      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-      document.body.setAttribute('data-theme', newTheme);
-      localStorage.setItem('theme', newTheme);
-    }
-
-    function initTheme() {
-      const savedTheme = localStorage.getItem('theme') || 
-                        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-      document.body.setAttribute('data-theme', savedTheme);
-    }
-
-
-
-    async function initialize() {
-      initTheme();
+  <script>    async function initialize() {
       try {
         await Promise.all([
           fetchAnnouncement(),
@@ -848,7 +713,7 @@
                 <span><i class="fas fa-calendar-alt"></i> 发布时间：${new Date(latestRelease.published_at).toLocaleDateString()}</span>
               </div>
             </div>
-            <ul class="assets" style="display:none;">
+            <ul class="assets">
               ${latestRelease.assets.map(asset => `
                 <li class="download-item">
                   <div class="file-info">
@@ -858,32 +723,16 @@
                   <div class="download-options">
                     <a href="${asset.browser_download_url}" class="download-link">
                       <i class="fas fa-download"></i> 普通下载
-                    </a>
-                    <a href="${generateProxyUrl(asset.browser_download_url)}" 
-                       class="download-link accelerated">
-                      <i class="fas fa-bolt"></i> 高速下载
-                    </a>
-                  </div>
+                    </a>                    <a href="${generateProxyUrl(asset.browser_download_url)}" 
+                       class="download-link accelerated"
+                       onclick="showProviderNotification()">
+                      <i class="fas fa-bolt"></i> 国内线路
+                    </a>                  </div>
                 </li>
               `).join('')}
             </ul>
-            <button class="submit-button toggle-assets">
-              <i class="fas fa-layer-group"></i> 显示下载
-            </button>
           </div>
         `;
-
-
-
-        document.querySelectorAll('.toggle-assets').forEach(button => {
-          button.addEventListener('click', function() {
-            const assetsList = this.previousElementSibling;
-            assetsList.style.display = assetsList.style.display === 'none' ? 'block' : 'none';
-            this.innerHTML = assetsList.style.display === 'none' ? 
-              '<i class="fas fa-layer-group"></i> 显示下载' : 
-              '<i class="fas fa-layer-group"></i> 隐藏下载';
-          });
-        });
       } catch (error) {
         showErrorNotification(`文件加载失败: ${error.message}`);
       }
@@ -932,7 +781,7 @@
     }
 
     function generateProxyUrl(url) {
-      return `https://ghproxy.net/${encodeURI(url)}`;
+      return `https://edgeone.gh-proxy.org/${encodeURI(url)}`;
     }
 
     function formatFileSize(bytes) {
@@ -1009,6 +858,35 @@
       closeBtn.style.cursor = 'pointer';
       closeBtn.style.color = '#2e7d32';
       closeBtn.style.fontSize = '1.2rem';
+    }
+
+    function showProviderNotification() {
+      const notification = document.createElement('div');
+      notification.className = 'provider-notification';
+      notification.innerHTML = `
+        <div class="provider-content">
+          <span><i class="fas fa-info-circle"></i> 国内线路提供者：gh-proxy</span>
+          <p>使用 gh-proxy（EdgeOne） 代理服务，为您提供更快的下载速度</p>
+        </div>
+      `;
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 3000);
+      
+      // 样式
+      notification.style.position = 'fixed';
+      notification.style.bottom = '20px';
+      notification.style.right = '20px';
+      notification.style.backgroundColor = '#e3f2fd';
+      notification.style.color = '#1565c0';
+      notification.style.padding = '15px 25px';
+      notification.style.borderRadius = '8px';
+      notification.style.zIndex = '10000';
+      notification.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+      
+      const providerContent = notification.querySelector('.provider-content');
+      providerContent.style.display = 'flex';
+      providerContent.style.flexDirection = 'column';
+      providerContent.style.gap = '8px';
     }
 
     // 初始化

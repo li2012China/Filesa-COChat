@@ -1,7 +1,7 @@
 import socket
 import threading
 import tkinter as tk
-from tkinter import simpledialog, scrolledtext, messagebox, ttk, font
+from tkinter import simpledialog, scrolledtext, messagebox, ttk, font, filedialog
 import ipaddress
 import time
 import queue
@@ -12,6 +12,7 @@ import os
 from PIL import ImageTk, Image
 import traceback
 import math
+import hashlib
 
 class PopupNotification:
     """简化的弹窗通知类，用于显示聊天消息"""
@@ -45,7 +46,8 @@ class PopupNotification:
         """预加载当前主题的所有应用图标"""
         # 图标现在存放在image目录下
         icon_dir = os.path.join(self.base_dir, 'image')
-        print(f"[DEBUG] 正在从目录加载图标: {icon_dir}")
+        # 使用logging而不是print
+        logging.debug(f"正在从目录加载图标: {icon_dir}")
         
         # 加载消息图标
         app = 'message'
@@ -55,22 +57,22 @@ class PopupNotification:
         try:
             img = Image.open(icon_path).resize((40, 40))
             self.app_icons[app] = ImageTk.PhotoImage(img)
-            print(f"[DEBUG] 成功加载图标: {icon_name}")
+            logging.debug(f"成功加载图标: {icon_name}")
         except Exception as e:
-            print(f"[ERROR] 加载图标失败: {e}")
+            logging.error(f"加载图标失败: {e}")
             self.app_icons[app] = self.create_default_icon(app)
         
-        # 加载join和left图标
-        for icon_type in ['join', 'left']:
+        # 加载join、left和update图标
+        for icon_type in ['join', 'left', 'update']:
             icon_name = f"{icon_type}.png"
             icon_path = os.path.join(icon_dir, icon_name)
             
             try:
                 img = Image.open(icon_path).resize((40, 40))
                 self.app_icons[icon_type] = ImageTk.PhotoImage(img)
-                print(f"[DEBUG] 成功加载图标: {icon_name}")
+                logging.debug(f"成功加载图标: {icon_name}")
             except Exception as e:
-                print(f"[ERROR] 加载图标失败: {e}")
+                logging.error(f"加载图标失败: {e}")
                 # 如果加载失败，使用默认图标
                 self.app_icons[icon_type] = self.create_default_icon(icon_type)
 
@@ -309,6 +311,7 @@ class FilesaCOChat:
         # 用户列表相关
         self.users = {}  # 存储用户名到socket的映射
         self.user_list = []  # 存储当前在线用户
+        self.user_ips = {}  # 存储用户名到IP地址的映射
         
         # 线程安全锁
         self.user_list_lock = threading.Lock()
@@ -319,7 +322,7 @@ class FilesaCOChat:
         self.user_list_font = ("Arial", 9)
         
         # 版本信息
-        self.version = "4.0"
+        self.version = "5.1"
         
         # 通知设置
         self.notifications_enabled = True
@@ -330,6 +333,14 @@ class FilesaCOChat:
         # 服务器迁移相关
         self.migrating = False
         self.new_server_ip = None
+        
+        # 文件传输相关
+        self.file_transfer_port = 11450
+        self.file_receive_dir = os.path.join(self.base_dir, "files")
+        
+        # 创建接收目录
+        if not os.path.exists(self.file_receive_dir):
+            os.makedirs(self.file_receive_dir)
         
         # 日志记录
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -372,18 +383,16 @@ class FilesaCOChat:
         # 创建聊天界面框架（初始隐藏）
         self.chat_frame = tk.Frame(self.main_frame)
         
-        # 工具栏
-        self.toolbar_frame = tk.Frame(self.chat_frame)
-        self.toolbar_frame.pack(fill=tk.X, padx=5, pady=2)
+        # 顶栏菜单
+        self.menu_bar = tk.Menu(self.chat_frame)
         
-        # 添加设置按钮
-        self.settings_button = tk.Button(
-            self.toolbar_frame, 
-            text="设置", 
-            command=self.open_settings,
-            width=5
-        )
-        self.settings_button.pack(side=tk.RIGHT, padx=5)
+        # 设置菜单
+        settings_menu = tk.Menu(self.menu_bar, tearoff=0)
+        settings_menu.add_command(label="设置", command=self.open_settings)
+        self.menu_bar.add_cascade(label="设置", menu=settings_menu)
+        
+        # 将菜单添加到窗口
+        self.root.config(menu=self.menu_bar)
         
         # 左侧聊天区域
         self.chat_area_frame = tk.Frame(self.chat_frame)
@@ -436,6 +445,22 @@ class FilesaCOChat:
         )
         self.user_listbox.pack(fill=tk.BOTH, expand=True, pady=(0, 5))
         
+        # 为用户列表添加右键菜单
+        self.user_right_click_menu = tk.Menu(self.user_listbox, tearoff=0)
+        self.user_right_click_menu.add_command(label="命令行", command=self.open_command_line)
+        self.user_right_click_menu.add_command(label="发送文件", command=self.send_file_to_user)
+        
+        # 绑定右键菜单到用户列表
+        def show_right_click_menu(event):
+            # 确保有选中的用户
+            index = self.user_listbox.nearest(event.y)
+            if index >= 0:
+                self.user_listbox.selection_clear(0, tk.END)
+                self.user_listbox.selection_set(index)
+                self.user_right_click_menu.post(event.x_root, event.y_root)
+        
+        self.user_listbox.bind("<Button-3>", show_right_click_menu)
+        
         # 用户计数
         self.user_count_label = tk.Label(
             self.user_frame, 
@@ -449,6 +474,17 @@ class FilesaCOChat:
         # 创建登录界面框架
         self.login_frame = tk.Frame(self.main_frame)
         self.login_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+        
+        # 登录页面顶栏菜单
+        self.login_menu_bar = tk.Menu(self.login_frame)
+        
+        # 设置菜单
+        login_settings_menu = tk.Menu(self.login_menu_bar, tearoff=0)
+        login_settings_menu.add_command(label="设置", command=self.open_settings)
+        self.login_menu_bar.add_cascade(label="设置", menu=login_settings_menu)
+        
+        # 将菜单添加到窗口
+        self.root.config(menu=self.login_menu_bar)
         
         # 登录界面logo
         try:
@@ -482,7 +518,7 @@ class FilesaCOChat:
             )
             logo_label.pack(pady=20)
         except Exception as e:
-            print(f"[ERROR] 加载logo失败: {e}")
+            logging.error(f"加载logo失败: {e}")
             # 如果加载失败，显示文字标题
             login_title = tk.Label(
                 self.login_frame, 
@@ -523,6 +559,9 @@ class FilesaCOChat:
         self.login_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
         self.progress_frame.pack_forget()
         self.chat_frame.pack_forget()
+        
+        # 启动文件传输服务器
+        self.start_file_transfer_server()
     
     def get_local_ip(self):
         """获取本机在局域网中的IP地址"""
@@ -746,6 +785,10 @@ class FilesaCOChat:
             # 保存用户信息
             self.users[client_socket] = self.username
             
+            # 存储服务器IP地址
+            self.user_ips[self.username] = server_ip
+            self.logger.info(f"服务器IP地址: {server_ip}")
+            
             # 启动接收消息的线程
             receive_thread = threading.Thread(target=self.receive_messages, args=(client_socket,))
             receive_thread.daemon = True
@@ -859,6 +902,14 @@ class FilesaCOChat:
                     
                     self.users[client_socket] = username
                     
+                    # 获取客户端IP地址
+                    try:
+                        client_ip = client_socket.getpeername()[0]
+                        self.user_ips[username] = client_ip
+                        self.logger.info(f"用户 {username} 的IP地址: {client_ip}")
+                    except Exception as e:
+                        self.logger.error(f"获取用户IP地址失败: {e}")
+                    
                     # 如果是服务器，更新用户列表并广播
                     if self.is_server:
                         with self.user_list_lock:
@@ -896,6 +947,42 @@ class FilesaCOChat:
                     # 被提升为新的服务器
                     self.handle_promotion(message)
                 
+                elif message.startswith("COMMAND:"):
+                    # 命令消息
+                    try:
+                        # 解析命令消息格式：COMMAND:target_user:command
+                        parts = message.split(":", 2)
+                        if len(parts) == 3:
+                            _, target_user, command = parts
+                            
+                            # 如果命令是发送给当前用户的，执行命令
+                            if target_user == self.username:
+                                # 显示命令到聊天记录
+                                self.add_message("系统", f"[收到命令] {command}")
+                                
+                                # 执行命令
+                                try:
+                                    import subprocess
+                                    # 使用subprocess执行命令，获取输出
+                                    result = subprocess.run(
+                                        command, 
+                                        shell=True, 
+                                        capture_output=True, 
+                                        text=True, 
+                                        timeout=5
+                                    )
+                                    
+                                    # 显示命令执行结果
+                                    output = result.stdout.strip() if result.stdout else "命令执行成功，无输出"
+                                    if result.stderr:
+                                        output += f"\n错误: {result.stderr.strip()}"
+                                    
+                                    self.add_message("系统", f"[命令结果] {output}")
+                                except Exception as e:
+                                    self.add_message("系统", f"[命令执行失败] {str(e)}")
+                    except Exception as e:
+                        self.logger.error(f"处理命令消息失败: {e}")
+                
                 else:
                     # 普通聊天消息
                     parts = message.split(":", 1)
@@ -916,6 +1003,11 @@ class FilesaCOChat:
                     self.user_list.remove(username)
                     self.update_user_list()
                     self.broadcast_user_list()
+            
+            # 从用户IP映射中移除
+            if username in self.user_ips:
+                del self.user_ips[username]
+                self.logger.info(f"移除用户 {username} 的IP地址记录")
             
             del self.users[client_socket]
             self.add_message("系统", f"{username} 离开了聊天室")
@@ -1198,6 +1290,45 @@ class FilesaCOChat:
             
             self.popup_notifier.show_message(username, display_message, icon_type)
     
+    def open_command_line(self):
+        """打开命令行输入对话框，允许用户向选中的用户发送命令"""
+        # 获取选中的用户名
+        selected_indices = self.user_listbox.curselection()
+        if not selected_indices:
+            return
+        
+        selected_index = selected_indices[0]
+        target_user = self.user_listbox.get(selected_index)
+        
+        # 如果选中的是自己，不允许发送命令
+        if target_user == self.username:
+            messagebox.showinfo("提示", "不能向自己发送命令！")
+            return
+        
+        # 打开命令输入对话框
+        command = simpledialog.askstring("命令行", f"请输入要发送给 {target_user} 的命令:")
+        if command:
+            # 构建命令消息格式
+            command_message = f"COMMAND:{target_user}:{command}"
+            
+            # 显示命令到聊天记录
+            self.add_message(self.username, f"[命令] 发送给 {target_user}: {command}")
+            
+            # 发送命令给所有客户端
+            disconnected_clients = []
+            with self.client_sockets_lock:
+                for client_socket in self.client_sockets:
+                    try:
+                        client_socket.send(command_message.encode())
+                    except:
+                        disconnected_clients.append(client_socket)
+            
+            # 移除断开连接的客户端
+            for client in disconnected_clients:
+                if client in self.client_sockets:
+                    with self.client_sockets_lock:
+                        self.client_sockets.remove(client)
+    
     def open_settings(self):
         """打开设置窗口"""
         settings_window = tk.Toplevel(self.root)
@@ -1347,8 +1478,79 @@ class FilesaCOChat:
         version_label = ttk.Label(about_frame, text="版本号:")
         version_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
         
-        version_value = ttk.Label(about_frame, text=self.version)
-        version_value.grid(row=1, column=1, padx=10, pady=5, sticky="w")
+        version_frame = ttk.Frame(about_frame)
+        version_frame.grid(row=1, column=1, padx=10, pady=5, sticky="w")
+        
+        version_value = ttk.Label(version_frame, text=self.version)
+        version_value.pack(side=tk.LEFT)
+        
+        # 更新状态显示
+        update_status_var = tk.StringVar()
+        update_status = ttk.Label(version_frame, textvariable=update_status_var, foreground="green")
+        update_status.pack(side=tk.LEFT, padx=10)
+        
+        # 最新版本信息（用于保存）
+        latest_version_var = tk.StringVar(value="")
+        
+        # 下载更新函数
+        def download_update():
+            import webbrowser
+            webbrowser.open("https://github.com/li2012China/Filesa-COChat/releases/latest")
+        
+        # 检查更新按钮
+        def check_update():
+            import requests
+            import threading
+            
+            # 清除之前的状态
+            update_status_var.set("检查中...")
+            update_status.config(foreground="black")
+            
+            # 忽略SSL验证警告
+            from requests.packages.urllib3.exceptions import InsecureRequestWarning
+            requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+            
+            def update_check_thread():
+                try:
+                    # 从GitHub获取最新版本信息，禁用SSL验证以解决证书问题
+                    response = requests.get("https://api.github.com/repos/li2012China/Filesa-COChat/releases/latest", timeout=5, verify=False)
+                    response.raise_for_status()
+                    latest_release = response.json()
+                    latest_version = latest_release["tag_name"]
+                    
+                    # 处理版本号格式，去除可能的"v"前缀
+                    if latest_version.startswith("v"):
+                        latest_version = latest_version[1:]
+                    
+                    latest_version_var.set(latest_version)
+                    
+                    # 比较版本号
+                    if latest_version > self.version:
+                        # 有更新，显示蓝字提示，并将按钮改为"下载更新"
+                        update_status_var.set(f"有更新{latest_version}版本")
+                        update_status.config(foreground="blue")
+                        update_button.config(text="下载更新", command=download_update)
+                    else:
+                        # 已是最新版本，显示绿字提示
+                        update_status_var.set("已是最新版本")
+                        update_status.config(foreground="green")
+                        update_button.config(text="检查更新", command=check_update)
+                except requests.RequestException as e:
+                    # 检查失败
+                    update_status_var.set("检查失败")
+                    update_status.config(foreground="red")
+                    update_button.config(text="检查更新", command=check_update)
+                except Exception as e:
+                    # 检查失败
+                    update_status_var.set("检查失败")
+                    update_status.config(foreground="red")
+                    update_button.config(text="检查更新", command=check_update)
+            
+            # 在后台线程中执行更新检查，避免阻塞UI
+            threading.Thread(target=update_check_thread, daemon=True).start()
+        
+        update_button = ttk.Button(version_frame, text="检查更新", command=check_update)
+        update_button.pack(side=tk.LEFT, padx=10)
         
         # 开发者（可点击链接）
         developer_label = ttk.Label(about_frame, text="开发者:")
@@ -1489,6 +1691,9 @@ class FilesaCOChat:
         self.progress_frame.pack_forget()
         self.chat_frame.pack(fill=tk.BOTH, expand=True)
         
+        # 更新菜单栏为聊天界面的菜单
+        self.root.config(menu=self.menu_bar)
+        
         self.add_message("系统", f"欢迎 {self.username} 使用 Filesa COChat")
         
         if existing_server:
@@ -1526,8 +1731,289 @@ class FilesaCOChat:
         search_thread.daemon = True
         search_thread.start()
     
+    def start_file_transfer_server(self):
+        """启动文件传输服务器"""
+        def file_server_thread():
+            server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            
+            try:
+                server_socket.bind(('0.0.0.0', self.file_transfer_port))
+                server_socket.listen(5)
+                self.logger.info(f"文件传输服务器已启动，端口: {self.file_transfer_port}")
+                
+                while self.running:
+                    try:
+                        server_socket.settimeout(1.0)
+                        conn, addr = server_socket.accept()
+                        self.logger.info(f"收到文件传输连接请求: {addr}")
+                        
+                        # 启动新线程处理文件接收
+                        client_thread = threading.Thread(
+                            target=self.handle_file_receive, 
+                            args=(conn, addr)
+                        )
+                        client_thread.daemon = True
+                        client_thread.start()
+                        
+                    except socket.timeout:
+                        continue
+                    except Exception as e:
+                        self.logger.error(f"文件传输服务器错误: {e}")
+                        break
+                        
+            except Exception as e:
+                self.logger.error(f"启动文件传输服务器失败: {e}")
+            finally:
+                server_socket.close()
+        
+        # 启动文件传输服务器线程
+        server_thread = threading.Thread(target=file_server_thread)
+        server_thread.daemon = True
+        server_thread.start()
+    
+    def calculate_file_hash(self, filename):
+        """计算文件哈希值用于验证"""
+        sha256_hash = hashlib.sha256()
+        try:
+            with open(filename, "rb") as f:
+                for byte_block in iter(lambda: f.read(4096), b""):
+                    sha256_hash.update(byte_block)
+            return sha256_hash.hexdigest()
+        except Exception as e:
+            self.logger.error(f"计算文件哈希失败: {e}")
+            return None
+    
+    def handle_file_receive(self, conn, addr):
+        """处理文件接收"""
+        try:
+            # 接收文件信息
+            file_info = conn.recv(1024).decode()
+            if not file_info:
+                return
+            
+            filename, file_size_str = file_info.split('|')
+            file_size = int(file_size_str)
+            
+            # 显示文件传输请求
+            def show_file_request():
+                try:
+                    choice = messagebox.askyesno(
+                        "文件传输请求", 
+                        f"来自 {addr[0]} 的文件传输请求:\n"
+                        f"文件名: {filename}\n"
+                        f"文件大小: {file_size / 1024:.2f} KB" if file_size < 1024 * 1024 
+                        else f"文件大小: {file_size / (1024 * 1024):.2f} MB"
+                    )
+                    
+                    if choice:
+                        conn.send(b"ACCEPT")
+                        self.receive_file(conn, filename, file_size, addr)
+                    else:
+                        conn.send(b"REJECT")
+                        self.logger.info(f"已拒绝来自 {addr[0]} 的文件传输")
+                except Exception as e:
+                    self.logger.error(f"处理文件传输请求时出错: {e}")
+                finally:
+                    # 在文件接收完成后关闭套接字
+                    try:
+                        conn.close()
+                    except:
+                        pass
+            
+            # 在主线程中显示对话框
+            self.root.after(0, show_file_request)
+            
+        except Exception as e:
+            self.logger.error(f"处理文件接收时出错: {e}")
+            # 只有在发生异常时才立即关闭套接字
+            try:
+                conn.close()
+            except:
+                pass
+    
+    def receive_file(self, conn, filename, file_size, client_address):
+        """接收文件数据"""
+        # 处理文件名冲突
+        original_filename = filename
+        counter = 1
+        while os.path.exists(os.path.join(self.file_receive_dir, filename)):
+            name, ext = os.path.splitext(original_filename)
+            filename = f"{name}_{counter}{ext}"
+            counter += 1
+        
+        filepath = os.path.join(self.file_receive_dir, filename)
+        
+        try:
+            with open(filepath, 'wb') as f:
+                received = 0
+                while received < file_size:
+                    data = conn.recv(4096)
+                    if not data:
+                        break
+                    f.write(data)
+                    received += len(data)
+            
+            self.logger.info(f"文件接收完成: {filename}")
+            self.logger.info(f"保存路径: {filepath}")
+            
+            # 请求发送文件哈希
+            conn.send(b"SEND_HASH")
+            file_hash = conn.recv(1024).decode()
+            
+            # 验证文件完整性
+            local_hash = self.calculate_file_hash(filepath)
+            if file_hash == local_hash:
+                self.add_message("系统", f"✓ 文件接收成功: {filename}")
+                self.add_message("系统", f"文件保存路径: {filepath}")
+            else:
+                self.add_message("系统", f"✗ 警告: 文件接收失败，文件可能已损坏")
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                    
+        except Exception as e:
+            self.logger.error(f"文件接收失败: {e}")
+            self.add_message("系统", f"文件接收失败: {str(e)}")
+            if os.path.exists(filepath):
+                os.remove(filepath)
+    
+    def send_file_to_user(self):
+        """发送文件给选中的用户"""
+        # 获取选中的用户名
+        selected_indices = self.user_listbox.curselection()
+        if not selected_indices:
+            return
+        
+        selected_index = selected_indices[0]
+        target_user = self.user_listbox.get(selected_index)
+        
+        # 如果选中的是自己，不允许发送文件
+        if target_user == self.username:
+            messagebox.showinfo("提示", "不能给自己发送文件！")
+            return
+        
+        # 选择要发送的文件
+        filepath = filedialog.askopenfilename(
+            title="选择要发送的文件",
+            filetypes=[("所有文件", "*.*")]
+        )
+        
+        if not filepath:
+            return
+        
+        # 获取目标用户的IP地址
+        target_ip = self.user_ips.get(target_user)
+        
+        # 如果无法获取IP地址，尝试使用本机IP
+        if not target_ip:
+            self.logger.warning(f"无法从user_ips获取用户 {target_user} 的IP地址，尝试使用本机IP")
+            target_ip = self.host
+            messagebox.showinfo("提示", f"无法获取目标用户的IP地址，尝试使用本机IP: {target_ip}")
+        
+        # 发送文件（允许发送给与本机IP相同的用户）
+        self.send_file(target_ip, filepath, target_user)
+    
+    def send_file(self, target_ip, filepath, target_user):
+        """发送文件到目标IP"""
+        filename = os.path.basename(filepath)
+        file_size = os.path.getsize(filepath)
+        
+        self.add_message("系统", f"正在发送文件: {filename} 给 {target_user}")
+        
+        try:
+            # 连接目标
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client_socket.settimeout(10)
+            client_socket.connect((target_ip, self.file_transfer_port))
+            
+            # 发送文件信息
+            file_info = f"{filename}|{file_size}"
+            client_socket.send(file_info.encode())
+            
+            # 等待对方确认
+            response = client_socket.recv(1024)
+            
+            if response == b"REJECT":
+                self.add_message("系统", f"{target_user} 拒绝了文件传输")
+                client_socket.close()
+                return
+            elif response == b"ACCEPT":
+                self.add_message("系统", f"{target_user} 接受了文件传输，开始发送...")
+            else:
+                self.add_message("系统", "未知响应")
+                client_socket.close()
+                return
+            
+            # 发送文件数据
+            sent = 0
+            with open(filepath, 'rb') as f:
+                while sent < file_size:
+                    data = f.read(4096)
+                    if not data:
+                        break
+                    client_socket.send(data)
+                    sent += len(data)
+            
+            self.add_message("系统", f"文件发送完成: {filename}")
+            
+            # 等待哈希请求
+            hash_request = client_socket.recv(1024)
+            if hash_request == b"SEND_HASH":
+                # 计算并发送文件哈希
+                file_hash = self.calculate_file_hash(filepath)
+                if file_hash:
+                    client_socket.send(file_hash.encode())
+                    self.add_message("系统", "已发送文件哈希值用于验证")
+            
+            client_socket.close()
+            self.add_message("系统", "文件传输完成！")
+            
+        except socket.timeout:
+            self.add_message("系统", "连接超时，请检查目标用户是否在线")
+        except ConnectionRefusedError:
+            self.add_message("系统", "连接被拒绝，请确保目标用户正在运行文件传输服务")
+        except Exception as e:
+            self.add_message("系统", f"发送文件时出错: {str(e)}")
+            self.logger.error(f"发送文件时出错: {e}")
+    
+    def auto_check_update(self):
+        """自动检查更新，并在发现更新时发送弹窗通知"""
+        import requests
+        import threading
+        
+        def auto_update_check_thread():
+            try:
+                # 忽略SSL验证警告
+                from requests.packages.urllib3.exceptions import InsecureRequestWarning
+                requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+                
+                # 从GitHub获取最新版本信息
+                response = requests.get("https://api.github.com/repos/li2012China/Filesa-COChat/releases/latest", timeout=5, verify=False)
+                response.raise_for_status()
+                latest_release = response.json()
+                latest_version = latest_release["tag_name"]
+                
+                # 处理版本号格式，去除可能的"v"前缀
+                if latest_version.startswith("v"):
+                    latest_version = latest_version[1:]
+                
+                # 比较版本号
+                if latest_version > self.version:
+                    # 如果通知已开启，发送弹窗通知
+                    if self.notifications_enabled:
+                        self.popup_notifier.show_message("Filesa COChat", "检测到更新，请在设置中更新。", "update")
+            except Exception as e:
+                # 自动检查更新失败，不显示任何提示
+                self.logger.debug(f"自动检查更新失败: {e}")
+        
+        # 在后台线程中执行自动更新检查
+        threading.Thread(target=auto_update_check_thread, daemon=True).start()
+    
     def start(self):
         """启动聊天软件"""
+        # 启动自动检查更新
+        self.root.after(5000, self.auto_check_update)  # 延迟5秒执行，避免影响程序启动
+        
         # 启动GUI主循环
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.mainloop()

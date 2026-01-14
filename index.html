@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Filesa COChat | 版本下载</title>
+  <title>Filesa COChat | 下载</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://fastlist-css.pages.dev/css2.css">
   <link rel="stylesheet" href="https://fastlist-css.pages.dev/css.css">
@@ -142,7 +143,7 @@
 
     @media (min-width: 768px) {
       .container {
-        grid-template-columns: 1.2fr 0.8fr;
+        grid-template-columns: 1fr;
       }
     }
 
@@ -721,17 +722,7 @@
       <div class="logo-icon">
         <i class="fas fa-cloud"></i>
       </div>
-      <h1>Filesa COChat - 版本下载</h1>
-    </div>
-    <div class="github-stats">
-      <div class="github-stat">
-        <i class="fab fa-github"></i>
-        <span id="github-stars">加载中...</span> 星标
-      </div>
-      <div class="github-stat">
-        <i class="fas fa-code-branch"></i>
-        <span id="github-forks">加载中...</span> 分支
-      </div>
+      <h1>下载Filesa COChat</h1>
     </div>
   </header>
   
@@ -748,33 +739,16 @@
       </div>
     </div>
 
-    <div class="stats-bar card">
-      <div class="stat-item">
-        <div class="stat-value" id="release-count">0</div>
-        <div class="stat-label">全部发行版</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value" id="file-count">0</div>
-        <div class="stat-label">全部正式版</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value" id="user-count">0</div>
-        <div class="stat-label">GitHub 星标</div>
-      </div>
-    </div>
 
-    <div class="card">
-      <h2 class="section-title"><i class="fas fa-box-open"></i> 发行版</h2>
-      <div class="release-grid" id="releases">
-        <div class="loading-text"><i class="fas fa-spinner"></i> 加载发行版中...</div>
-      </div>
+
+    <div id="releases">
+      <div class="loading-text"><i class="fas fa-spinner"></i> 加载发行版中...</div>
     </div>
 
     <div class="card">
       <h2 class="section-title"><i class="fas fa-comments"></i> 社区讨论</h2>
       <div class="discussion-grid">
         <div class="quick-create">
-          <h3 style="margin-top:0; color: var(--primary);"><i class="fas fa-pen"></i> 新建讨论</h3>
           <input type="text" id="issueTitle" 
                  placeholder="输入讨论标题（必填）" 
                  class="form-input"
@@ -788,9 +762,6 @@
             <i class="fas fa-plus-circle"></i> 创建讨论
           </button>
         </div>
-        <div id="discussions">
-          <div class="loading-text"><i class="fas fa-spinner"></i> 加载讨论中...</div>
-        </div>
       </div>
     </div>
 
@@ -802,7 +773,7 @@
     </section>
     
     <div class="footer">
-      <p>©By <a href="https://github.com/li2012China">li2012China</a> 2023-2025 --- <a href"https://github.com/li2012China/Filesa-COChat">Filesa and COChat</a></p>
+      <p>©By <a href="https://github.com/li2012China">li2012China</a> 2023-<span id="current-year">2025</span> --- <a href"https://github.com/li2012China/Filesa-COChat">Filesa and COChat</a></p>
     </div>
   </div>
 
@@ -821,32 +792,14 @@
       document.body.setAttribute('data-theme', savedTheme);
     }
 
-    // 获取GitHub仓库信息
-    async function fetchGitHubStats() {
-      try {
-        const response = await fetch('https://api.github.com/repos/li2012China/Filesa-COChat');
-        if (!response.ok) throw new Error('获取GitHub信息失败');
-        
-        const data = await response.json();
-        document.getElementById('github-stars').textContent = data.stargazers_count;
-        document.getElementById('github-forks').textContent = data.forks_count;
-        document.getElementById('user-count').textContent = data.stargazers_count;
-      } catch (error) {
-        console.error('获取GitHub数据失败:', error);
-        document.getElementById('github-stars').textContent = 'N/A';
-        document.getElementById('github-forks').textContent = 'N/A';
-        document.getElementById('user-count').textContent = 'N/A';
-      }
-    }
+
 
     async function initialize() {
       initTheme();
       try {
         await Promise.all([
           fetchAnnouncement(),
-          fetchReleases(),
-          fetchDiscussions(),
-          fetchGitHubStats()
+          fetchReleases()
         ]);
       } catch (error) {
         showErrorNotification(`初始化失败: ${error.message}`);
@@ -883,17 +836,20 @@
         const releases = await response.json();
         const container = document.getElementById('releases');
         
-        container.innerHTML = releases.map(release => `
+        // 只显示最新的发行版
+        const latestRelease = releases[0];
+        
+        container.innerHTML = `
           <div class="release">
             <div class="release-header">
-              <h3><i class="fas fa-tag"></i> ${escapeHtml(release.name)}</h3>
+              <h3><i class="fas fa-tag"></i> ${escapeHtml(latestRelease.name)}</h3>
               <div class="release-meta">
-                <span><i class="fas fa-code-branch"></i> 版本：${escapeHtml(release.tag_name)}</span>
-                <span><i class="fas fa-calendar-alt"></i> 发布时间：${new Date(release.published_at).toLocaleDateString()}</span>
+                <span><i class="fas fa-code-branch"></i> 版本：${escapeHtml(latestRelease.tag_name)}</span>
+                <span><i class="fas fa-calendar-alt"></i> 发布时间：${new Date(latestRelease.published_at).toLocaleDateString()}</span>
               </div>
             </div>
             <ul class="assets" style="display:none;">
-              ${release.assets.map(asset => `
+              ${latestRelease.assets.map(asset => `
                 <li class="download-item">
                   <div class="file-info">
                     <span class="file-name"><i class="fas fa-file"></i> ${escapeHtml(asset.name)}</span>
@@ -915,12 +871,9 @@
               <i class="fas fa-layer-group"></i> 显示下载
             </button>
           </div>
-        `).join('');
+        `;
 
-        // 更新统计信息
-        document.getElementById('release-count').textContent = releases.length;
-        const totalFiles = releases.reduce((acc, release) => acc + release.assets.length, 0);
-        document.getElementById('file-count').textContent = totalFiles;
+
 
         document.querySelectorAll('.toggle-assets').forEach(button => {
           button.addEventListener('click', function() {
@@ -936,82 +889,9 @@
       }
     }
 
-    // 获取并显示讨论区
-    async function fetchDiscussions() {
-      try {
-        const response = await fetch('https://api.github.com/repos/li2012China/Filesa-COChat/issues');
-        const issues = await response.json();
 
-        const container = document.getElementById('discussions');
-        container.innerHTML = '';
-        
-        issues.forEach(issue => {
-          const issueDiv = document.createElement('div');
-          issueDiv.className = 'issue';
-          issueDiv.innerHTML = `
-            <div class="issue-header">
-              <div class="user-info">
-                <img src="${issue.user.avatar_url}" class="avatar" alt="${issue.user.login}">
-                <div class="user-details">
-                  <div class="comment-author">${issue.user.login}</div>
-                  <div class="comment-date">${new Date(issue.created_at).toLocaleString()}</div>
-                </div>
-              </div>
-              <h3><i class="fas fa-comment-dots"></i> ${issue.title}</h3>
-              <p>${issue.body || '无内容描述'}</p>
-              <button class="submit-button" onclick="loadComments(this, ${issue.number})"
-                style="margin-top:15px;padding:10px 20px;">
-                <i class="fas fa-comments"></i> 显示评论 (${issue.comments})
-              </button>
-            </div>
-            <div class="comments-container" style="display:none;"></div>
-          `;
-          container.appendChild(issueDiv);
-        });
-      } catch (error) {
-        console.error('获取讨论信息失败:', error);
-        showErrorNotification('加载讨论失败，请稍后重试');
-      }
-    }
 
-    // 加载评论
-    async function loadComments(button, issueNumber) {
-      const container = button.parentElement.nextElementSibling;
-      if (container.children.length === 0) {
-        try {
-          button.disabled = true;
-          button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 加载中...';
-          
-          const response = await fetch(`https://api.github.com/repos/li2012China/Filesa-COChat/issues/${issueNumber}/comments`);
-          const comments = await response.json();
-          
-          container.innerHTML = comments.map(comment => `
-            <div class="comment">
-              <img src="${comment.user.avatar_url}" class="avatar" alt="${comment.user.login}">
-              <div class="comment-content">
-                <div class="user-info">
-                  <span class="comment-author">${comment.user.login}</span>
-                  <span class="comment-date">${new Date(comment.created_at).toLocaleString()}</span>
-                </div>
-                <div class="comment-body">${comment.body || '无评论内容'}</div>
-              </div>
-            </div>
-          `).join('');
-          
-          button.innerHTML = `<i class="fas fa-comments"></i> 隐藏评论 (${comments.length})`;
-        } catch (error) {
-          console.error('获取评论失败:', error);
-          container.innerHTML = '<div class="error-text"><i class="fas fa-exclamation-triangle"></i> 无法加载评论</div>';
-          button.innerHTML = `<i class="fas fa-comments"></i> 显示评论 (${issueNumber})`;
-        } finally {
-          button.disabled = false;
-        }
-      }
-      container.style.display = container.style.display === 'none' ? 'block' : 'none';
-      button.innerHTML = container.style.display === 'none' ? 
-        `<i class="fas fa-comments"></i> 显示评论 (${issueNumber})` : 
-        `<i class="fas fa-comments"></i> 隐藏评论 (${issueNumber})`;
-    }
+
 
     // 创建Issue
     function createNewIssue() {
@@ -1132,7 +1012,15 @@
     }
 
     // 初始化
-    document.addEventListener('DOMContentLoaded', initialize);
+    document.addEventListener('DOMContentLoaded', function() {
+      // 更新当前年份
+      const currentYearElement = document.getElementById('current-year');
+      if (currentYearElement) {
+        currentYearElement.textContent = new Date().getFullYear();
+      }
+      
+      initialize();
+    });
   </script>
 </body>
 </html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - 页面未找到</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="assets/icon.ico" type="image/x-icon">
+    <style>
+        /* 404页面特定样式 */
+        .error-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 24px;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+        }
+
+        .error-container {
+            text-align: center;
+            max-width: 600px;
+        }
+
+        .error-code {
+            font-size: 120px;
+            font-weight: 700;
+            color: var(--primary-color);
+            line-height: 1;
+            margin-bottom: 20px;
+            text-shadow: 0 0 40px rgba(0, 120, 215, 0.3);
+        }
+
+        .error-icon {
+            font-size: 80px;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .error-title {
+            font-size: 32px;
+            font-weight: 300;
+            margin-bottom: 16px;
+        }
+
+        .error-message {
+            color: var(--text-secondary);
+            font-size: 18px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .error-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .error-suggestions {
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .error-suggestions h3 {
+            font-size: 18px;
+            font-weight: 300;
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+        }
+
+        .suggestion-links {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .suggestion-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 10px 20px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .suggestion-link:hover {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .error-code {
+                font-size: 80px;
+            }
+
+            .error-icon {
+                font-size: 60px;
+            }
+
+            .error-title {
+                font-size: 24px;
+            }
+
+            .error-message {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img src="assets/icon.ico" alt="Logo" class="nav-logo">
+            <span>Filesa-COChat</span>
+        </div>
+        <div class="nav-links" id="nav-links">
+            <a href="index.html" class="nav-link">首页</a>
+            <a href="index.html#features" class="nav-link">功能</a>
+            <a href="download.html" class="nav-link">下载</a>
+            <a href="https://github.com/li2012China/Filesa-COChat" target="_blank" class="nav-link nav-link-primary">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="切换菜单">
+            <i class="fas fa-bars"></i>
+        </button>
+    </nav>
+
+    <!-- 404错误页面内容 -->
+    <main class="error-page">
+        <div class="error-container">
+            <div class="error-code">404</div>
+            <div class="error-icon">
+                <i class="fas fa-ghost"></i>
+            </div>
+            <h1 class="error-title">页面未找到</h1>
+            <p class="error-message">
+                抱歉，您访问的页面似乎不存在或已被移除。<br>
+                请检查网址是否正确，或返回首页继续浏览。
+            </p>
+            <div class="error-actions">
+                <a href="index.html" class="btn btn-primary">
+                    <i class="fas fa-home"></i> 返回首页
+                </a>
+                <a href="download.html" class="btn btn-secondary">
+                    <i class="fas fa-download"></i> 下载软件
+                </a>
+            </div>
+
+            <div class="error-suggestions">
+                <h3>您可能想要访问：</h3>
+                <div class="suggestion-links">
+                    <a href="index.html#features" class="suggestion-link">功能特性</a>
+                    <a href="download.html" class="suggestion-link">下载页面</a>
+                    <a href="index.html#usage" class="suggestion-link">使用指南</a>
+                    <a href="https://github.com/li2012China/Filesa-COChat" target="_blank" class="suggestion-link">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="assets/icon.ico" alt="Logo" class="footer-logo">
+                    <span>Filesa-COChat</span>
+                </div>
+                <p class="footer-desc">AI 计划项目 - 教室与办公室的好工具</p>
+                <div class="footer-links">
+                    <a href="https://github.com/li2012China/Filesa-COChat" target="_blank" class="footer-link">GitHub</a>
+                    <a href="https://github.com/li2012China/Filesa-COChat/issues" target="_blank" class="footer-link">提交 Issue</a>
+                    <a href="https://github.com/li2012China/Filesa-COChat/blob/main/LICENSE" target="_blank" class="footer-link">MIT 许可证</a>
+                </div>
+                <p class="footer-copyright">
+                    &copy; <span id="current-year"></span> li2012China. Made with ❤️ and AI.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

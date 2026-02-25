@@ -1,904 +1,292 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Filesa COChat | 下载</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="https://fastlist-css.pages.dev/css2.css">
-  <link rel="stylesheet" href="https://fastlist-css.pages.dev/css.css">
-  <style>
-    /* css */
-    :root {
-      --primary: #0067C0;
-      --on-primary: #FFFFFF;
-      --primary-container: #D3E5FF;
-      --on-primary-container: #001D36;
-      
-      --secondary: #535F70;
-      --on-secondary: #FFFFFF;
-      --secondary-container: #D7E3F7;
-      --on-secondary-container: #101C2B;
-      
-      --surface: #F9F9FA;
-      --on-surface: #1A1C1E;
-      --surface-variant: #DFE2EB;
-      --on-surface-variant: #43474E;
-      
-      --background: #F9F9FA;
-      --on-background: #1A1C1E;
-      
-      --outline: #74777F;
-      --outline-variant: #C4C6D0;
-      
-      --error: #BA1A1A;
-      --on-error: #FFFFFF;
-      --error-container: #FFDAD6;
-      --on-error-container: #410002;
-      
-      --success: #0C7D60;
-      --on-success: #FFFFFF;
-      --success-container: #A6F2DB;
-      --on-success-container: #002116;
-      
-      --warning: #E6B400;
-      --on-warning: #FFFFFF;
-      --warning-container: #FFE9A3;
-      --on-warning-container: #4C3D00;
-      
-      --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
-      --elevation-2: 0 2px 6px rgba(0, 0, 0, 0.05), 0 3px 6px rgba(0, 0, 0, 0.1);
-      --elevation-3: 0 4px 12px rgba(0, 0, 0, 0.05), 0 6px 12px rgba(0, 0, 0, 0.1);
-      
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-      --radius-xl: 18px;
-      --radius-xxl: 28px;
-      
-      --spacing-xs: 4px;
-      --spacing-sm: 8px;
-      --spacing-md: 16px;
-      --spacing-lg: 24px;
-      --spacing-xl: 32px;
-      --spacing-xxl: 48px;
-      
-      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      
-      --icon-size-sm: 18px;
-      --icon-size-md: 24px;
-      --icon-size-lg: 32px;
-    }
-
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Roboto', 'Segoe UI', system-ui, sans-serif;
-      transition: background-color var(--transition), color var(--transition), border-color var(--transition);
-    }
-    
-    body {
-      background-color: var(--background);
-      color: var(--on-background);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      line-height: 1.5;
-      padding: var(--spacing-md);
-    }
-    
-    .container {
-      max-width: 1300px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: var(--spacing-lg);
-      padding-bottom: var(--spacing-xl);
-    }
-
-    @media (min-width: 768px) {
-      .container {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    header {
-      grid-column: 1 / -1;
-      text-align: center;
-      margin: var(--spacing-xl) 0;
-      position: relative;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--spacing-md);
-      margin-bottom: var(--spacing-sm);
-    }
-
-    .logo-icon {
-      background: var(--primary);
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .logo-icon i {
-      font-size: 28px;
-      color: var(--on-primary);
-    }
-
-    h1 {
-      color: var(--primary);
-      font-size: 2.5rem;
-      margin-bottom: var(--spacing-sm);
-    }
-    .card {
-      background: var(--surface);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--elevation-1);
-      padding: var(--spacing-xl);
-      margin-bottom: var(--spacing-xl);
-      transition: box-shadow var(--transition), transform var(--transition);
-    }
-    
-    .card:hover {
-      box-shadow: var(--elevation-2);
-    }
-
-    .announcement-section {
-      grid-column: 1 / -1;
-      background: var(--warning-container);
-      padding: var(--spacing-lg);
-      border-radius: var(--radius-lg);
-      margin-bottom: var(--spacing-md);
-    }
-
-    .announcement-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: var(--spacing-md);
-    }
-
-    .announcement-title {
-      color: var(--on-warning-container);
-      margin: 0;
-      font-size: 1.4rem;
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-sm);
-    }
-
-    .refresh-button {
-      background: rgba(255, 255, 255, 0.3);
-      border: 1px solid var(--on-warning-container);
-      color: var(--on-warning-container);
-      padding: var(--spacing-sm) var(--spacing-md);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: var(--transition);
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-xs);
-    }
-
-    .refresh-button:hover {
-      background: var(--on-warning-container);
-      color: var(--warning-container);
-    }
-
-    .section-title {
-      color: var(--primary);
-      padding-bottom: var(--spacing-md);
-      margin-top: 0;
-      margin-bottom: var(--spacing-lg);
-      font-size: 1.6rem;
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-sm);
-      border-bottom: 1px solid var(--outline-variant);
-    }
-
-    .section-title i {
-      font-size: 1.4rem;
-    }
-
-    .release {
-      background-color: var(--surface-variant);
-      padding: var(--spacing-lg);
-      margin: var(--spacing-lg) 0;
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--outline-variant);
-      transition: var(--transition);
-    }
-
-    .release-header h3 {
-      color: var(--primary);
-      margin-bottom: var(--spacing-sm);
-      font-size: 1.3rem;
-    }
-
-    .release-meta {
-      display: flex;
-      gap: var(--spacing-lg);
-      color: var(--on-surface-variant);
-      margin-bottom: var(--spacing-md);
-      font-size: 0.95rem;
-    }
-
-    .download-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: var(--spacing-md);
-      margin: var(--spacing-sm) 0;
-      background: var(--surface);
-      border-radius: var(--radius-md);
-      border: 1px solid var(--outline-variant);
-      transition: var(--transition);
-    }
-
-    .download-item:hover {
-      transform: translateX(5px);
-      border-left: 4px solid var(--primary);
-    }
-
-    .file-info {
-      flex: 1;
-    }
-
-    .file-name {
-      font-weight: 600;
-      display: block;
-      margin-bottom: var(--spacing-xs);
-      font-size: 1.1rem;
-      color: var(--primary);
-    }
-
-    .file-size {
-      color: var(--on-surface-variant);
-      font-size: 0.9rem;
-    }
-
-    .download-options {
-      display: flex;
-      gap: var(--spacing-sm);
-    }
-
-    .download-link {
-      padding: var(--spacing-sm) var(--spacing-md);
-      border-radius: var(--radius-sm);
-      text-decoration: none;
-      transition: var(--transition);
-      font-size: 0.95rem;
-      font-weight: 500;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-xs);
-    }
-
-    .download-link:not(.accelerated) {
-      background: var(--surface-variant);
-      color: var(--on-surface-variant);
-      border: 1px solid var(--outline-variant);
-    }
-
-    .download-link:not(.accelerated):hover {
-      background: var(--outline-variant);
-    }
-
-    .download-link.accelerated {
-      background: var(--primary);
-      color: var(--on-primary);
-      border: 1px solid var(--primary);
-    }
-
-    .download-link.accelerated:hover {
-      opacity: 0.9;
-    }
-
-    .toggle-assets {
-      background: var(--primary);
-      color: var(--on-primary);
-      padding: var(--spacing-sm) var(--spacing-md);
-      border: none;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      font-family: inherit;
-      font-weight: 600;
-      transition: var(--transition);
-      margin-top: var(--spacing-md);
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-xs);
-    }
-
-    .toggle-assets:hover {
-      opacity: 0.9;
-    }
-
-    .quick-create {
-      background: var(--surface-variant);
-      padding: var(--spacing-lg);
-      border-radius: var(--radius-lg);
-      margin: var(--spacing-lg) 0;
-      border: 1px solid var(--outline-variant);
-      transition: var(--transition);
-    }
-
-    .form-input, .form-textarea {
-      width: 100%;
-      padding: var(--spacing-md);
-      margin: var(--spacing-sm) 0;
-      border: 1px solid var(--outline-variant);
-      border-radius: var(--radius-md);
-      box-sizing: border-box;
-      font-family: inherit;
-      transition: var(--transition);
-      font-size: 1rem;
-      background: var(--surface);
-      color: var(--on-surface);
-    }
-
-    .form-input:focus, .form-textarea:focus {
-      border-color: var(--primary);
-      outline: none;
-    }
-
-    .submit-button {
-      background: var(--primary);
-      color: var(--on-primary);
-      padding: var(--spacing-md) var(--spacing-lg);
-      border: none;
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      font-family: inherit;
-      font-weight: 600;
-      transition: var(--transition);
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--spacing-xs);
-      margin-top: var(--spacing-sm);
-    }
-
-    .submit-button:hover {
-      opacity: 0.9;
-    }
-
-    .issue {
-      margin: var(--spacing-lg) 0;
-      padding: var(--spacing-lg);
-      background: var(--surface);
-      border: 1px solid var(--outline-variant);
-      border-radius: var(--radius-lg);
-      transition: var(--transition);
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-md);
-      margin-bottom: var(--spacing-md);
-    }
-
-    .avatar {
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid var(--primary);
-      padding: 2px;
-    }
-
-    .comment {
-      margin: var(--spacing-lg) 0;
-      padding: var(--spacing-lg);
-      background: var(--surface-variant);
-      border-radius: var(--radius-md);
-      display: flex;
-      gap: var(--spacing-lg);
-      transition: var(--transition);
-      border: 1px solid var(--outline-variant);
-    }
-
-    .comment:hover {
-      transform: translateX(5px);
-      border-left: 3px solid var(--primary);
-    }
-
-    .comment-content {
-      flex-grow: 1;
-    }
-
-    .comment-author {
-      font-weight: 600;
-      color: var(--primary);
-      font-size: 1.1rem;
-    }
-
-    .comment-date {
-      color: var(--on-surface-variant);
-      font-size: 0.85rem;
-      margin-top: 3px;
-    }
-
-    .comments-container {
-      margin-top: var(--spacing-lg);
-      border-top: 1px solid var(--outline-variant);
-      padding-top: var(--spacing-lg);
-    }
-
-    .disclaimer-section {
-      grid-column: 1 / -1;
-      margin-top: var(--spacing-xl);
-      padding: var(--spacing-lg);
-      background: var(--surface-variant);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--outline-variant);
-      font-size: 0.95rem;
-      color: var(--on-surface-variant);
-      text-align: center;
-    }
-
-    .disclaimer-link {
-      color: var(--primary);
-      text-decoration: none;
-      font-weight: 600;
-      transition: var(--transition);
-      border-bottom: 1px dashed var(--primary);
-    }
-
-    .disclaimer-link:hover {
-      border-bottom-style: solid;
-    }
-
-    .loading-text {
-      text-align: center;
-      color: var(--on-surface-variant);
-      padding: var(--spacing-xl);
-      font-size: 1.1rem;
-    }
-
-    .loading-text i {
-      margin-right: var(--spacing-sm);
-      animation: spin 1.5s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .stats-bar {
-      display: flex;
-      justify-content: space-around;
-      padding: var(--spacing-md);
-      background: var(--surface);
-      border-radius: var(--radius-lg);
-      margin: var(--spacing-lg) 0;
-      grid-column: 1 / -1;
-      border: 1px solid var(--outline-variant);
-    }
-
-    .stat-item {
-      text-align: center;
-      padding: var(--spacing-sm);
-    }
-
-    .stat-value {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: var(--spacing-xs);
-    }
-
-    .stat-label {
-      color: var(--on-surface-variant);
-      font-size: 0.95rem;
-    }
-
-    .footer {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: var(--spacing-lg);
-      margin-top: var(--spacing-lg);
-      color: var(--on-surface-variant);
-      font-size: 0.9rem;
-      border-top: 1px solid var(--outline-variant);
-    }
-
-    /* 新增样式 */
-    .github-stats {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--spacing-md);
-      margin-top: var(--spacing-sm);
-    }
-    
-    .github-stat {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-xs);
-      color: var(--on-surface-variant);
-      font-size: 0.95rem;
-    }
-    
-    .github-stat i {
-      color: var(--primary);
-    }
-    
-    .release-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: var(--spacing-lg);
-    }
-    
-    .discussion-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: var(--spacing-lg);
-    }
-    
-    @media (min-width: 768px) {
-      .release-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .discussion-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 768px) {
-      body {
-        padding: var(--spacing-sm);
-      }
-      
-      h1 {
-        font-size: 2.2rem;
-      }
-      
-      .section-title {
-        font-size: 1.5rem;
-      }
-      
-      .download-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--spacing-md);
-      }
-
-      .download-options {
-        width: 100%;
-        flex-direction: column;
-      }
-      
-      .download-link {
-        width: 100%;
-        text-align: center;
-        justify-content: center;
-      }
-      
-      .stats-bar {
-        flex-direction: column;
-        gap: var(--spacing-md);
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filesa-COChat - 无需服务器的轻量级聊天软件</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="assets/icon.ico" type="image/x-icon">
 </head>
 <body>
-  <header>
-    <div class="logo">
-      <div class="logo-icon">
-        <i class="fas fa-cloud"></i>
-      </div>
-      <h1>下载Filesa COChat</h1>
-    </div>
-  </header>
-  
-  <div class="container">
-    <div class="announcement-section card">
-      <div class="announcement-header">
-        <h2 class="announcement-title"><i class="fas fa-bullhorn"></i> 公告</h2>
-        <button class="refresh-button" onclick="fetchAnnouncement()">
-          <i class="fas fa-sync-alt"></i> 刷新
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img src="assets/icon.ico" alt="Logo" class="nav-logo">
+            <span>Filesa-COChat</span>
+        </div>
+        <div class="nav-links" id="nav-links">
+            <a href="#features" class="nav-link">功能</a>
+            <a href="download.html" class="nav-link">下载</a>
+            <a href="#usage" class="nav-link">使用</a>
+            <a href="https://github.com/li2012China/Filesa-COChat" target="_blank" class="nav-link nav-link-primary">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="切换菜单">
+            <i class="fas fa-bars"></i>
         </button>
-      </div>
-      <div id="announcement-content">
-        <div class="loading-text"><i class="fas fa-spinner"></i> 加载公告中...</div>
-      </div>
-    </div>
+    </nav>
 
-
-
-    <div id="releases">
-      <div class="loading-text"><i class="fas fa-spinner"></i> 加载发行版中...</div>
-    </div>
-
-    <div class="card">
-      <h2 class="section-title"><i class="fas fa-comments"></i> 议题与漏洞</h2>
-      <div class="discussion-grid">
-        <div class="quick-create">
-          <input type="text" id="issueTitle" 
-                 placeholder="输入讨论标题（必填）" 
-                 class="form-input"
-                 required>
-          <textarea id="issueBody" 
-                    class="form-textarea"
-                    placeholder="输入讨论内容（支持Markdown格式）"
-                    rows="4"></textarea>
-          <button onclick="createNewIssue()" 
-                  class="submit-button">
-            <i class="fas fa-plus-circle"></i> 创建讨论
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <section class="disclaimer-section card">
-      <strong><i class="fas fa-exclamation-circle"></i> 免责声明：</strong>
-      Filesa是<a href="https://github.com/li2012China/Filesa-COChat">开源</a>的，如果您付费获取了本产品，那么您被骗了。
-      页面由Github/Hy1Fly的YF-PageUI改编而成
-
-    </section>
-    
-    <div class="footer">
-      <p>©By <a href="https://github.com/li2012China">li2012China</a> 2023-<span id="current-year">2025</span> --- <a href"https://github.com/li2012China/Filesa-COChat">Filesa and COChat</a></p>
-    </div>
-  </div>
-
-  <script>    async function initialize() {
-      try {
-        await Promise.all([
-          fetchAnnouncement(),
-          fetchReleases()
-        ]);
-      } catch (error) {
-        showErrorNotification(`初始化失败: ${error.message}`);
-      }
-    }
-
-    // 公告
-    async function fetchAnnouncement() {
-      const contentDiv = document.getElementById('announcement-content');
-      try {
-        contentDiv.innerHTML = '<div class="loading-text"><i class="fas fa-spinner"></i> 加载中...</div>';
-        const response = await fetch('https://raw.githubusercontent.com/li2012China/Filesa-COChat/main/web/readme.txt');
-        if (!response.ok) throw new Error(`HTTP错误! 状态码: ${response.status}`);
-        const text = await response.text();
-        contentDiv.innerHTML = (text || '暂无公告').replace(/\n/g, '<br>');
-      } catch (error) {
-        contentDiv.innerHTML = `
-          <div class="error-text">
-            <i class="fas fa-exclamation-triangle"></i> ${escapeHtml(error.message)}
-            <button onclick="fetchAnnouncement()" class="refresh-button" style="margin-top:10px;">
-              <i class="fas fa-redo"></i> 重试
-            </button>
-          </div>
-        `;
-      }
-    }
-
-    // 完整文件发布功能
-    async function fetchReleases() {
-      try {
-        const response = await fetch('https://api.github.com/repos/li2012China/Filesa-COChat/releases');
-        if (!response.ok) throw new Error('获取发布信息失败');
-        
-        const releases = await response.json();
-        const container = document.getElementById('releases');
-        
-        // 只显示最新的发行版
-        const latestRelease = releases[0];
-        
-        container.innerHTML = `
-          <div class="release">
-            <div class="release-header">
-              <h3><i class="fas fa-tag"></i> ${escapeHtml(latestRelease.name)}</h3>
-              <div class="release-meta">
-                <span><i class="fas fa-code-branch"></i> 版本：${escapeHtml(latestRelease.tag_name)}</span>
-                <span><i class="fas fa-calendar-alt"></i> 发布时间：${new Date(latestRelease.published_at).toLocaleDateString()}</span>
-              </div>
+    <!-- 英雄区域 -->
+    <header class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                <span class="highlight">💬</span> 无需服务器的<br>轻量级聊天软件
+            </h1>
+            <p class="hero-subtitle">
+                基于 HTML 和 Electron 的局域网聊天工具<br>
+                无需服务器、即时通信
+            </p>
+            <div class="hero-actions">
+                <a href="download.html" class="btn btn-primary">
+                    立即下载
+                </a>
+                <a href="https://github.com/li2012China/Filesa-COChat" target="_blank" class="btn btn-secondary">
+                    查看源码
+                </a>
             </div>
-            <ul class="assets">
-              ${latestRelease.assets.map(asset => `
-                <li class="download-item">
-                  <div class="file-info">
-                    <span class="file-name"><i class="fas fa-file"></i> ${escapeHtml(asset.name)}</span>
-                    <span class="file-size"><i class="fas fa-database"></i> ${formatFileSize(asset.size)}</span>
-                  </div>
-                  <div class="download-options">
-                    <a href="${asset.browser_download_url}" class="download-link">
-                      <i class="fas fa-download"></i> 普通下载
-                    </a>                    <a href="${generateProxyUrl(asset.browser_download_url)}" 
-                       class="download-link accelerated"
-                       onclick="showProviderNotification()">
-                      <i class="fas fa-bolt"></i> 国内线路
-                    </a>                  </div>
-                </li>
-              `).join('')}
-            </ul>
-          </div>
-        `;
-      } catch (error) {
-        showErrorNotification(`文件加载失败: ${error.message}`);
-      }
-    }
-
-
-
-
-
-    // 创建Issue
-    function createNewIssue() {
-      const titleInput = document.getElementById('issueTitle');
-      const bodyInput = document.getElementById('issueBody');
-      
-      if (!titleInput.value.trim()) {
-        titleInput.focus();
-        titleInput.style.borderColor = '#e74c3c';
-        setTimeout(() => titleInput.style.borderColor = '#e0e0e0', 2000);
-        showErrorNotification('请填写讨论标题');
-        return;
-      }
-
-      const baseUrl = 'https://github.com/li2012China/Filesa-COChat/issues/new';
-      const params = new URLSearchParams({
-        title: titleInput.value.trim(),
-        body: bodyInput.value.trim(),
-        labels: 'user-generated'
-      });
-
-      const newWindow = window.open(`${baseUrl}?${params.toString()}`, '_blank');
-      
-      if (newWindow) {
-        titleInput.value = '';
-        bodyInput.value = '';
-        showSuccessNotification('讨论创建成功！请在GitHub页面完成提交');
-      }
-    }
-
-    function escapeHtml(unsafe) {
-      return unsafe.toString()
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    function generateProxyUrl(url) {
-      return `https://edgeone.gh-proxy.org/${encodeURI(url)}`;
-    }
-
-    function formatFileSize(bytes) {
-      const units = ['Bytes', 'KB', 'MB', 'GB'];
-      if (bytes == 0) return '0 Bytes';
-      const exp = Math.floor(Math.log(bytes) / Math.log(1024));
-      return `${(bytes / Math.pow(1024, exp)).toFixed(2)} ${units[exp]}`;
-    }
-
-    // 错误提示功能
-    function showErrorNotification(message) {
-      const notification = document.createElement('div');
-      notification.className = 'error-notification';
-      notification.innerHTML = `
-        <div class="error-content">
-          <span><i class="fas fa-exclamation-circle"></i> ${escapeHtml(message)}</span>
-          <button class="close-button"><i class="fas fa-times"></i></button>
+            <div class="hero-badges">
+                <span class="badge">Electron</span>
+                <span class="badge">Windows 10+</span>
+                <span class="badge">MIT 许可证</span>
+            </div>
         </div>
-      `;
-      document.body.appendChild(notification);
-      notification.querySelector('.close-button').onclick = () => notification.remove();
-      setTimeout(() => notification.remove(), 5000);
-      
-      // 样式
-      notification.style.position = 'fixed';
-      notification.style.bottom = '20px';
-      notification.style.right = '20px';
-      notification.style.backgroundColor = '#ffebee';
-      notification.style.color = '#c62828';
-      notification.style.padding = '15px 25px';
-      notification.style.borderRadius = '8px';
-      notification.style.zIndex = '10000';
-      notification.style.display = 'flex';
-      notification.style.alignItems = 'center';
-      notification.style.gap = '10px';
-      
-      const closeBtn = notification.querySelector('.close-button');
-      closeBtn.style.background = 'none';
-      closeBtn.style.border = 'none';
-      closeBtn.style.cursor = 'pointer';
-      closeBtn.style.color = '#c62828';
-      closeBtn.style.fontSize = '1.2rem';
-    }
-    
-    function showSuccessNotification(message) {
-      const notification = document.createElement('div');
-      notification.className = 'success-notification';
-      notification.innerHTML = `
-        <div class="success-content">
-          <span><i class="fas fa-check-circle"></i> ${escapeHtml(message)}</span>
-          <button class="close-button"><i class="fas fa-times"></i></button>
-        </div>
-      `;
-      document.body.appendChild(notification);
-      notification.querySelector('.close-button').onclick = () => notification.remove();
-      setTimeout(() => notification.remove(), 5000);
-      
-      // 样式
-      notification.style.position = 'fixed';
-      notification.style.bottom = '20px';
-      notification.style.right = '20px';
-      notification.style.backgroundColor = '#e8f5e9';
-      notification.style.color = '#2e7d32';
-      notification.style.padding = '15px 25px';
-      notification.style.borderRadius = '8px';
-      notification.style.zIndex = '10000';
-      notification.style.display = 'flex';
-      notification.style.alignItems = 'center';
-      notification.style.gap = '10px';
-      
-      const closeBtn = notification.querySelector('.close-button');
-      closeBtn.style.background = 'none';
-      closeBtn.style.border = 'none';
-      closeBtn.style.cursor = 'pointer';
-      closeBtn.style.color = '#2e7d32';
-      closeBtn.style.fontSize = '1.2rem';
-    }
+        <div class="hero-visual">
+            <div class="app-window">
+                <!-- 窗口标题栏 -->
+                <div class="window-header">
+                    <img src="assets/icon.ico" alt="Logo" class="window-logo">
+                    <span class="window-title">Filesa COChat</span>
+                    <div class="window-controls">
+                        <span class="window-btn minimize">−</span>
+                        <span class="window-btn maximize">□</span>
+                        <span class="window-btn close">×</span>
+                    </div>
+                </div>
+                
+                <!-- 登录界面 -->
+                <div class="app-login" id="app-login">
+                    <div class="login-box">
+                        <div class="login-title">Filesa COChat</div>
+                        <div class="login-form">
+                            <label class="login-label">用户名:</label>
+                            <input type="text" id="login-username" class="login-input" placeholder="请输入用户名" value="" readonly>
+                            <button class="login-button">登录</button>
+                        </div>
+                    </div>
+                </div>
 
-    function showProviderNotification() {
-      const notification = document.createElement('div');
-      notification.className = 'provider-notification';
-      notification.innerHTML = `
-        <div class="provider-content">
-          <span><i class="fas fa-info-circle"></i> 国内线路提供者：gh-proxy</span>
-          <p>使用 gh-proxy（EdgeOne） 代理服务，为您提供更快的下载速度</p>
+                <!-- 聊天界面 -->
+                <div class="app-chat" id="app-chat" style="display: none;">
+                    <div class="chat-main">
+                        <div class="chat-content-area">
+                            <div class="chat-messages-demo">
+                                <div class="msg-system">你已成功加入频道</div>
+                                <div class="msg-other">
+                                    <div class="msg-header">xiaoyang2011 <span class="msg-time">10:30:25</span></div>
+                                    <div class="msg-content">大家好！这个聊天工具真方便~</div>
+                                </div>
+                                <div class="msg-self">
+                                    <div class="msg-header">li2012China <span class="msg-time">10:30:32</span></div>
+                                    <div class="msg-content">是啊，不用配置服务器就能用！</div>
+                                </div>
+                                <div class="msg-system">The Empire 加入了频道</div>
+                                <div class="msg-other">
+                                    <div class="msg-header">Spooooke <span class="msg-time">10:30:45</span></div>
+                                    <div class="msg-content">自动发现功能太棒了 👍</div>
+                                </div>
+                                <div class="msg-other">
+                                    <div class="msg-header">wangkaikai111 <span class="msg-time">10:31:02</span></div>
+                                    <div class="msg-content">上信息课交流更方便啦！</div>
+                                </div>
+                            </div>
+                            <div class="user-panel">
+                                <div class="user-panel-header">在线用户 (5)</div>
+                                <div class="user-list-demo">
+                                    <div class="user-item-demo"><span class="user-dot"></span>li2012China</div>
+                                    <div class="user-item-demo"><span class="user-dot"></span>xiaoyang2011</div>
+                                    <div class="user-item-demo"><span class="user-dot"></span>Spooooke</div>
+                                    <div class="user-item-demo"><span class="user-dot"></span>wangkaikai111</div>
+                                    <div class="user-item-demo"><span class="user-dot"></span>HANANIHA</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-input-demo">
+                            <input type="text" id="chat-input" class="chat-input-box" placeholder="输入消息...">
+                            <button id="chat-send-btn" class="chat-send">发送</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      `;
-      document.body.appendChild(notification);
-      setTimeout(() => notification.remove(), 3000);
-      
-      // 样式
-      notification.style.position = 'fixed';
-      notification.style.bottom = '20px';
-      notification.style.right = '20px';
-      notification.style.backgroundColor = '#e3f2fd';
-      notification.style.color = '#1565c0';
-      notification.style.padding = '15px 25px';
-      notification.style.borderRadius = '8px';
-      notification.style.zIndex = '10000';
-      notification.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-      
-      const providerContent = notification.querySelector('.provider-content');
-      providerContent.style.display = 'flex';
-      providerContent.style.flexDirection = 'column';
-      providerContent.style.gap = '8px';
-    }
+    </header>
 
-    // 初始化
-    document.addEventListener('DOMContentLoaded', function() {
-      // 更新当前年份
-      const currentYearElement = document.getElementById('current-year');
-      if (currentYearElement) {
-        currentYearElement.textContent = new Date().getFullYear();
-      }
-      
-      initialize();
-    });
-  </script>
+    <!-- 功能特性 -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">✨ 核心功能</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3 class="feature-title">无需专用服务器</h3>
+                    <p class="feature-desc">自动发现局域网内的频道或创建新频道，零配置即可使用</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3 class="feature-title">智能发现机制</h3>
+                    <p class="feature-desc">结合广播和多线程扫描技术，快速发现可用频道</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3 class="feature-title">实时用户列表</h3>
+                    <p class="feature-desc">显示所有在线用户并实时更新，随时了解谁在线</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3 class="feature-title">个性化字体设置</h3>
+                    <p class="feature-desc">可自定义聊天字体、大小和样式，打造专属聊天体验</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3 class="feature-title">服务器迁移</h3>
+                    <p class="feature-desc">支持服务器无缝迁移，确保频道持久可用</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3 class="feature-title">实时消息传递</h3>
+                    <p class="feature-desc">支持多用户实时文字聊天，消息即时送达</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 下载区域 -->
+    <section id="download" class="download">
+        <div class="container">
+            <h2 class="section-title">📥 下载安装</h2>
+            <div class="download-content">
+                <div class="download-info">
+                    <h3>系统要求</h3>
+                    <ul class="requirement-list">
+                        <li><span class="check">✓</span> Windows 10 或更高版本</li>
+                        <li><span class="check">✓</span> Electron 框架</li>
+                        <li><span class="check">✓</span> 支持 TCP/IP 协议的局域网环境</li>
+                    </ul>
+                </div>
+                <div class="download-actions">
+                    <a href="https://github.com/li2012China/Filesa-COChat/releases/latest" target="_blank" class="btn btn-primary btn-large">
+                        下载最新版本
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 使用指南 -->
+    <section id="usage" class="usage">
+        <div class="container">
+            <h2 class="section-title">📖 使用指南</h2>
+            <div class="usage-steps">
+                <div class="usage-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>启动程序</h3>
+                        <p>启动程序后，输入您的用户名。程序会自动搜索局域网内现有的频道。</p>
+                    </div>
+                </div>
+                <div class="usage-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>加入或创建频道</h3>
+                        <p>如果找到频道，会自动加入；否则会创建新的频道。</p>
+                    </div>
+                </div>
+                <div class="usage-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>开始聊天</h3>
+                        <p>在输入框中输入消息，按回车键或点击"发送"按钮发送消息。</p>
+                    </div>
+                </div>
+                <div class="usage-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>个性化设置</h3>
+                        <p>点击右上角的"设置"按钮，自定义字体、大小和样式。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技术架构 -->
+    <section class="tech">
+        <div class="container">
+            <h2 class="section-title">🛠️ 技术架构</h2>
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h4>通信协议</h4>
+                    <p>使用 TCP socket 进行可靠的消息传输，支持广播发现和多线程扫描</p>
+                </div>
+                <div class="tech-card">
+                    <h4>用户管理</h4>
+                    <p>实时同步用户列表，自动检测用户名冲突，离线自动清理</p>
+                </div>
+                <div class="tech-card">
+                    <h4>架构设计</h4>
+                    <p>基于面向对象设计，多线程处理网络通信，队列机制实现线程安全</p>
+                </div>
+                <div class="tech-card">
+                    <h4>高可用性</h4>
+                    <p>服务器退出时自动迁移，确保频道不会因服务器退出而关闭</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 常见问题 -->
+    <section class="faq">
+        <div class="container">
+            <h2 class="section-title">❓ 常见问题</h2>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <h4 class="faq-question">Q: 无法连接到其他用户？</h4>
+                    <p class="faq-answer">A: 确保所有用户在同一个局域网，检查防火墙设置是否阻止了相关端口。</p>
+                </div>
+                <div class="faq-item">
+                    <h4 class="faq-question">Q: 用户名冲突怎么办？</h4>
+                    <p class="faq-answer">A: 程序会自动检测冲突，请选择不同的用户名重新加入。</p>
+                </div>
+                <div class="faq-item">
+                    <h4 class="faq-question">Q: 消息发送失败？</h4>
+                    <p class="faq-answer">A: 可能是网络连接问题，尝试重新启动程序。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="assets/icon.ico" alt="Logo" class="footer-logo">
+                    <span>Filesa-COChat</span>
+                </div>
+                <p class="footer-desc">AI 计划项目 - 教室与办公室的好工具</p>
+                <div class="footer-links">
+                    <a href="https://github.com/li2012China/Filesa-COChat" target="_blank" class="footer-link">GitHub</a>
+                    <a href="https://github.com/li2012China/Filesa-COChat/issues" target="_blank" class="footer-link">提交 Issue</a>
+                    <a href="https://github.com/li2012China/Filesa-COChat/blob/main/LICENSE" target="_blank" class="footer-link">MIT 许可证</a>
+                </div>
+                <p class="footer-copyright">
+                    &copy; <span id="current-year"></span> li2012China. Made with ❤️ and AI.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>

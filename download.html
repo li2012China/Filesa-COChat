@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>下载 - Filesa-COChat</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="assets/icon.ico" type="image/x-icon">
+    <style>
+        /* 下载页面特定样式 */
+        .download-page {
+            min-height: 100vh;
+            padding-top: 80px;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+        }
+
+        .download-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        .download-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .download-header h1 {
+            font-size: 42px;
+            font-weight: 300;
+            margin-bottom: 16px;
+        }
+
+        .download-header h1 .highlight {
+            color: var(--primary-color);
+        }
+
+        .download-header p {
+            color: var(--text-secondary);
+            font-size: 18px;
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .download-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .download-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .download-card.featured {
+            border-left-color: var(--accent-green);
+            position: relative;
+        }
+
+        .download-card.featured::before {
+            content: "推荐";
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: var(--accent-green);
+            color: white;
+            padding: 4px 12px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .download-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .download-card.featured .download-icon {
+            color: var(--accent-green);
+        }
+
+        .download-card.disabled {
+            opacity: 0.6;
+            border-left-color: var(--text-secondary);
+        }
+
+        .download-card.disabled .download-icon {
+            color: var(--text-secondary);
+        }
+
+        .download-card.disabled h3,
+        .download-card.disabled .version,
+        .download-card.disabled .file-info {
+            color: var(--text-secondary);
+        }
+
+        .download-card.disabled button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .download-card h3 {
+            font-size: 24px;
+            font-weight: 300;
+            margin-bottom: 12px;
+        }
+
+        .download-card .version {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .download-card .file-info {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+
+        .download-card .btn {
+            width: 100%;
+        }
+
+        .requirements-section {
+            background-color: var(--bg-card);
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+
+        .requirements-section h2 {
+            font-size: 24px;
+            font-weight: 300;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .requirements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .requirement-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .requirement-item i {
+            font-size: 24px;
+            color: var(--primary-color);
+            margin-top: 4px;
+        }
+
+        .requirement-item h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .requirement-item p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .changelog-section {
+            background-color: var(--bg-card);
+            padding: 40px;
+        }
+
+        .changelog-section h2 {
+            font-size: 24px;
+            font-weight: 300;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .changelog-list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .changelog-item {
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .changelog-item:last-child {
+            border-bottom: none;
+        }
+
+        .changelog-version {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .changelog-date {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .changelog-changes {
+            list-style: none;
+        }
+
+        .changelog-changes li {
+            color: var(--text-secondary);
+            font-size: 14px;
+            padding: 4px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .changelog-changes li::before {
+            content: "•";
+            color: var(--primary-color);
+            position: absolute;
+            left: 0;
+        }
+
+        @media (max-width: 768px) {
+            .download-header h1 {
+                font-size: 32px;
+            }
+
+            .download-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .requirements-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img src="assets/icon.ico" alt="Logo" class="nav-logo">
+            <span>Filesa-COChat</span>
+        </div>
+        <div class="nav-links" id="nav-links">
+            <a href="index.html#features" class="nav-link">功能</a>
+            <a href="download.html" class="nav-link">下载</a>
+            <a href="index.html#usage" class="nav-link">使用</a>
+            <a href="https://github.com/li2012China/Filesa-COChat" target="_blank" class="nav-link nav-link-primary">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="切换菜单">
+            <i class="fas fa-bars"></i>
+        </button>
+    </nav>
+
+    <!-- 下载页面内容 -->
+    <main class="download-page">
+        <div class="download-container">
+            <!-- 页面标题 -->
+            <div class="download-header">
+                <h1><span class="highlight">📥</span> 下载 Filesa-COChat</h1>
+                <p>选择适合您系统的版本，开始即时通信体验</p>
+            </div>
+
+            <!-- 下载选项 -->
+            <div class="download-grid">
+                <!-- Windows 版本 -->
+                <div class="download-card featured">
+                    <div class="download-icon">
+                        <i class="fab fa-windows"></i>
+                    </div>
+                    <h3>Windows</h3>
+                    <p class="version">最新版本 v1.0.0</p>
+                    <p class="file-info">64位 | 安装包 45MB</p>
+                    <a href="https://github.com/li2012China/Filesa-COChat/releases/latest" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-download"></i> 下载安装包
+                    </a>
+                </div>
+
+                <!-- macOS 版本 - 即将推出 -->
+                <div class="download-card disabled">
+                    <div class="download-icon">
+                        <i class="fab fa-apple"></i>
+                    </div>
+                    <h3>macOS</h3>
+                    <p class="version">即将推出</p>
+                    <p class="file-info">正在开发中</p>
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-clock"></i> 敬请期待
+                    </button>
+                </div>
+
+                <!-- Linux 版本 - 即将推出 -->
+                <div class="download-card disabled">
+                    <div class="download-icon">
+                        <i class="fab fa-linux"></i>
+                    </div>
+                    <h3>Linux</h3>
+                    <p class="version">即将推出</p>
+                    <p class="file-info">正在开发中</p>
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-clock"></i> 敬请期待
+                    </button>
+                </div>
+            </div>
+
+            <!-- 系统要求 -->
+            <div class="requirements-section">
+                <h2>🖥️ 系统要求</h2>
+                <div class="requirements-grid">
+                    <div class="requirement-item">
+                        <i class="fab fa-windows"></i>
+                        <div>
+                            <h4>操作系统</h4>
+                            <p>Windows 10 或 Windows 11（64位）</p>
+                        </div>
+                    </div>
+                    <div class="requirement-item">
+                        <i class="fas fa-microchip"></i>
+                        <div>
+                            <h4>处理器</h4>
+                            <p>64位处理器，支持 SSE4.2 指令集</p>
+                        </div>
+                    </div>
+                    <div class="requirement-item">
+                        <i class="fas fa-memory"></i>
+                        <div>
+                            <h4>内存</h4>
+                            <p>至少 4GB RAM 可用内存</p>
+                        </div>
+                    </div>
+                    <div class="requirement-item">
+                        <i class="fas fa-network-wired"></i>
+                        <div>
+                            <h4>网络</h4>
+                            <p>支持 TCP/IP 协议的局域网环境</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 更新日志 -->
+            <div class="changelog-section">
+                <h2>📝 更新日志</h2>
+                <div class="changelog-list">
+                    <div class="changelog-item">
+                        <div class="changelog-version">v1.0.0</div>
+                        <div class="changelog-date">2026年2月</div>
+                        <ul class="changelog-changes">
+                            <li>初始版本发布</li>
+                            <li>支持局域网自动发现</li>
+                            <li>实时消息通信功能</li>
+                            <li>用户列表实时更新</li>
+                            <li>个性化字体设置</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="assets/icon.ico" alt="Logo" class="footer-logo">
+                    <span>Filesa-COChat</span>
+                </div>
+                <p class="footer-desc">AI 计划项目 - 教室与办公室的好工具</p>
+                <div class="footer-links">
+                    <a href="https://github.com/li2012China/Filesa-COChat" target="_blank" class="footer-link">GitHub</a>
+                    <a href="https://github.com/li2012China/Filesa-COChat/issues" target="_blank" class="footer-link">提交 Issue</a>
+                    <a href="https://github.com/li2012China/Filesa-COChat/blob/main/LICENSE" target="_blank" class="footer-link">MIT 许可证</a>
+                </div>
+                <p class="footer-copyright">
+                    &copy; <span id="current-year"></span> li2012China. Made with ❤️ and AI.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

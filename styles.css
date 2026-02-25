@@ -1,0 +1,969 @@
+/* ===========================================
+   Filesa-COChat 静态网站 - Metro 风格样式
+   =========================================== */
+
+/* 1. 变量定义 */
+:root {
+    --primary-color: #0078d7;
+    --primary-color-dark: #005a9e;
+    --primary-text-color: white;
+    --bg-dark: #171717;
+    --bg-card: #2a2a2a;
+    --bg-hover: #3e3e3e;
+    --text-primary: #ffffff;
+    --text-secondary: #a2a2a2;
+    --border-color: #333333;
+    --accent-green: #27ae60;
+    --accent-orange: #f39c12;
+    --accent-red: #e74c3c;
+    --hue-rotate-deg: 0deg;
+}
+
+/* 2. 全局重置和基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* 3. 容器 */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* 4. 导航栏 */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: rgba(23, 23, 23, 0.95);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 48px;
+    z-index: 1000;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.nav-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nav-link:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-hover);
+}
+
+.nav-link-primary {
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+}
+
+.nav-link-primary:hover {
+    background-color: var(--primary-color-dark);
+    filter: brightness(1.1);
+}
+
+.mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.mobile-menu-toggle:hover {
+    color: var(--primary-color);
+}
+
+/* 5. 英雄区域 */
+.hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 100px 48px 60px;
+    background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+    gap: 60px;
+}
+
+.hero-content {
+    flex: 1;
+    max-width: 600px;
+}
+
+.hero-title {
+    font-size: 48px;
+    font-weight: 300;
+    line-height: 1.2;
+    margin-bottom: 24px;
+}
+
+.hero-title .highlight {
+    color: var(--primary-color);
+}
+
+.hero-subtitle {
+    font-size: 18px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    line-height: 1.8;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.hero-badges {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    background-color: var(--bg-card);
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* 6. 按钮样式 */
+.btn {
+    display: inline-block;
+    padding: 14px 32px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+}
+
+.btn-primary:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: var(--text-primary);
+    border: 2px solid var(--text-secondary);
+}
+
+.btn-secondary:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-large {
+    padding: 18px 48px;
+    font-size: 16px;
+}
+
+/* 7. 应用窗口演示 */
+.hero-visual {
+    flex: 1;
+    max-width: 600px;
+}
+
+.app-window {
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    height: 400px;
+    max-height: 400px;
+}
+
+/* 窗口标题栏 */
+.window-header {
+    background-color: #2a2a2a;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.window-logo {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    object-fit: contain;
+}
+
+.window-title {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.window-controls {
+    display: flex;
+    gap: 2px;
+}
+
+.window-btn {
+    width: 30px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.window-btn:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.window-btn.close:hover {
+    background-color: #e74c3c;
+    color: white;
+}
+
+/* 登录界面 */
+.app-login {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-dark);
+}
+
+.login-box {
+    text-align: center;
+    padding: 40px;
+}
+
+.login-logo {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 20px;
+    object-fit: contain;
+}
+
+.login-title {
+    font-size: 24px;
+    color: var(--primary-color);
+    margin-bottom: 30px;
+    font-weight: 300;
+}
+
+.login-form {
+    width: 280px;
+    text-align: left;
+}
+
+.login-label {
+    display: block;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.login-input {
+    width: 100%;
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: white;
+    font-size: 16px;
+    padding: 12px 15px;
+    outline: none;
+    margin-bottom: 20px;
+}
+
+.login-input::placeholder {
+    color: #74776f;
+}
+
+.login-button {
+    width: 100%;
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+    border: none;
+    font-size: 16px;
+    padding: 12px;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+}
+
+.login-button:hover {
+    filter: brightness(1.1);
+}
+
+/* 聊天界面 */
+.app-chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-dark);
+    overflow: hidden;
+    height: calc(400px - 45px);
+}
+
+.chat-main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100%;
+}
+
+.chat-content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    min-height: 0;
+    height: calc(100% - 60px);
+}
+
+.chat-content-area > .chat-messages-demo {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    display: block;
+    height: 100%;
+}
+
+.chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+}
+
+.chat-messages-demo {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: block;
+    background-color: var(--bg-dark);
+    min-height: 0;
+    max-height: 100%;
+}
+
+.chat-messages-demo > div {
+    margin-bottom: 12px;
+}
+
+.chat-messages-demo > div:last-child {
+    margin-bottom: 0;
+}
+
+.msg-system {
+    text-align: center;
+    background-color: var(--bg-card);
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    font-size: 13px;
+    font-style: italic;
+    margin: 0 auto 12px;
+    display: table;
+}
+
+.msg-other {
+    max-width: 80%;
+    background-color: var(--bg-card);
+    border-left: 3px solid var(--primary-color);
+    padding: 10px 15px;
+    margin-right: auto;
+}
+
+.msg-self {
+    max-width: 80%;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 15px;
+    margin-left: auto;
+}
+
+.msg-header {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    display: flex;
+    gap: 8px;
+}
+
+.msg-self .msg-header {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.msg-time {
+    opacity: 0.7;
+}
+
+.msg-content {
+    font-size: 14px;
+    word-wrap: break-word;
+}
+
+.chat-input-demo {
+    display: flex;
+    padding: 12px 15px;
+    background-color: #2a2a2a;
+    border-top: 1px solid var(--border-color);
+    gap: 10px;
+    flex-shrink: 0;
+    height: 60px;
+}
+
+.chat-input-box {
+    flex: 1;
+    background-color: transparent;
+    border: 1px solid #888;
+    color: white;
+    font-size: 14px;
+    padding: 10px 15px;
+    outline: none;
+}
+
+.chat-input-box::placeholder {
+    color: #74776f;
+}
+
+.chat-send {
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+    border: none;
+    padding: 0 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: filter 0.2s ease;
+}
+
+.chat-send:hover {
+    filter: brightness(1.1);
+}
+
+/* 用户列表面板 */
+.user-panel {
+    width: 140px;
+    background-color: #2a2a2a;
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow-y: auto;
+    height: 100%;
+}
+
+.user-panel-header {
+    padding: 12px 15px;
+    font-size: 13px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+    background-color: #333;
+}
+
+.user-list-demo {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.user-item-demo {
+    padding: 8px 10px;
+    font-size: 13px;
+    background-color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #27ae60;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* 8. 功能特性区域 */
+.features {
+    padding: 100px 0;
+    background-color: var(--bg-dark);
+}
+
+.section-title {
+    font-size: 32px;
+    font-weight: 300;
+    text-align: center;
+    margin-bottom: 60px;
+    color: var(--text-primary);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+}
+
+.feature-card {
+    background-color: var(--bg-card);
+    padding: 32px;
+    border-left: 4px solid var(--primary-color);
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.feature-icon {
+    font-size: 40px;
+    margin-bottom: 16px;
+}
+
+.feature-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--primary-color);
+}
+
+.feature-desc {
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+/* 9. 下载区域 */
+.download {
+    padding: 100px 0;
+    background-color: var(--bg-card);
+}
+
+.download-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+}
+
+.download-info h3 {
+    font-size: 24px;
+    font-weight: 300;
+    margin-bottom: 24px;
+}
+
+.requirement-list {
+    list-style: none;
+}
+
+.requirement-list li {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.check {
+    color: var(--accent-green);
+    font-weight: bold;
+}
+
+.download-actions {
+    text-align: center;
+}
+
+.download-note {
+    margin-top: 24px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.code-block {
+    display: block;
+    background-color: var(--bg-dark);
+    padding: 16px 24px;
+    margin-top: 12px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    color: var(--accent-green);
+    border-left: 4px solid var(--accent-green);
+    text-align: left;
+}
+
+/* 10. 使用指南 */
+.usage {
+    padding: 100px 0;
+    background-color: var(--bg-dark);
+}
+
+.usage-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.usage-step {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.step-number {
+    width: 60px;
+    height: 60px;
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.step-content h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--primary-color);
+}
+
+.step-content p {
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+/* 11. 技术架构 */
+.tech {
+    padding: 100px 0;
+    background-color: var(--bg-card);
+}
+
+.tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+}
+
+.tech-card {
+    background-color: var(--bg-dark);
+    padding: 24px;
+    border-left: 4px solid var(--accent-orange);
+}
+
+.tech-card h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--accent-orange);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tech-card p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* 12. 常见问题 */
+.faq {
+    padding: 100px 0;
+    background-color: var(--bg-dark);
+}
+
+.faq-list {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.faq-item {
+    background-color: var(--bg-card);
+    padding: 24px;
+    border-left: 4px solid var(--accent-green);
+}
+
+.faq-question {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.faq-answer {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* 13. 页脚 */
+.footer {
+    padding: 60px 0 30px;
+    background-color: #0f0f0f;
+    border-top: 1px solid var(--border-color);
+}
+
+.footer-content {
+    text-align: center;
+}
+
+.footer-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.footer-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.footer-desc {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.footer-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+    color: var(--primary-color);
+}
+
+.footer-copyright {
+    color: var(--text-secondary);
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+/* 14. 动画 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 120, 215, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 120, 215, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 120, 215, 0);
+    }
+}
+
+@keyframes ripple {
+    to {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* 15. 滚动条样式 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #555;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}
+
+/* 16. 响应式设计 */
+@media (max-width: 968px) {
+    .hero {
+        flex-direction: column;
+        text-align: center;
+        padding: 100px 24px 60px;
+    }
+
+    .hero-title {
+        font-size: 36px;
+    }
+
+    .hero-actions {
+        justify-content: center;
+    }
+
+    .hero-badges {
+        justify-content: center;
+    }
+
+    .hero-visual {
+        max-width: 100%;
+    }
+
+    .download-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .code-block {
+        text-align: center;
+    }
+
+    .navbar {
+        padding: 0 24px;
+    }
+
+    .nav-links {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        background-color: rgba(23, 23, 23, 0.98);
+        flex-direction: column;
+        padding: 20px;
+        gap: 0;
+        transform: translateY(-100%);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .nav-links.active {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .nav-links .nav-link {
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .nav-links .nav-link:last-child {
+        border-bottom: none;
+    }
+
+    .mobile-menu-toggle {
+        display: block;
+    }
+}
+
+@media (max-width: 600px) {
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tech-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .usage-step {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .step-number {
+        margin: 0 auto;
+    }
+
+    .hero-title {
+        font-size: 28px;
+    }
+}

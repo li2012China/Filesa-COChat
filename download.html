@@ -284,9 +284,9 @@
                         <i class="fab fa-windows"></i>
                     </div>
                     <h3>Windows</h3>
-                    <p class="version">最新版本 v1.0.0</p>
-                    <p class="file-info">64位 | 安装包 45MB</p>
-                    <a href="https://github.com/li2012China/Filesa-COChat/releases/latest" target="_blank" class="btn btn-primary">
+                    <p class="version">最新版本 <span id="windows-version">v1.0.0</span></p>
+                    <p class="file-info">64位 | 安装包 <span id="windows-size">45MB</span></p>
+                    <a href="download.html" class="btn btn-primary">
                         <i class="fas fa-download"></i> 下载安装包
                     </a>
                 </div>
@@ -356,18 +356,8 @@
             <!-- 更新日志 -->
             <div class="changelog-section">
                 <h2>📝 更新日志</h2>
-                <div class="changelog-list">
-                    <div class="changelog-item">
-                        <div class="changelog-version">v1.0.0</div>
-                        <div class="changelog-date">2026年2月</div>
-                        <ul class="changelog-changes">
-                            <li>初始版本发布</li>
-                            <li>支持局域网自动发现</li>
-                            <li>实时消息通信功能</li>
-                            <li>用户列表实时更新</li>
-                            <li>个性化字体设置</li>
-                        </ul>
-                    </div>
+                <div class="changelog-list" id="changelog-list">
+                    <div class="loading-text"><i class="fas fa-spinner"></i> 加载更新日志中...</div>
                 </div>
             </div>
         </div>
@@ -395,5 +385,568 @@
     </footer>
 
     <script src="script.js"></script>
+    <script>
+        // 完整文件发布功能
+        async function fetchReleases() {
+          try {
+            const response = await fetch('https://api.github.com/repos/li2012China/Filesa-COChat/releases');
+            if (!response.ok) throw new Error('获取发布信息失败');
+            
+            const releases = await response.json();
+            // 过滤掉 pre-release 版本
+            const stableReleases = releases.filter(release => !release.prerelease);
+            if (stableReleases.length === 0) throw new Error('暂无正式版本');
+            
+            // 只显示最新的正式发行版
+            const latestRelease = stableReleases[0];
+            
+            // 构建弹窗内容
+            let modalContent = `
+              <div class="release-modal-content">
+                <div class="release-modal-header">
+                  <h3><i class="fas fa-tag"></i> ${escapeHtml(latestRelease.name)}</h3>
+                  <button class="close-modal" onclick="closeReleaseModal()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="release-modal-body">
+                  <div class="release-meta">
+                    <span><i class="fas fa-code-branch"></i> 版本：${escapeHtml(latestRelease.tag_name)}</span>
+                    <span><i class="fas fa-calendar-alt"></i> 发布时间：${new Date(latestRelease.published_at).toLocaleDateString()}</span>
+                  </div>
+                  ${latestRelease.body ? `
+                  <div class="release-description">
+                    <h4><i class="fas fa-info-circle"></i> 发行说明</h4>
+                    <div class="description-content">${parseMarkdown(latestRelease.body)}</div>
+                  </div>
+                  ` : ''}
+                  <ul class="release-assets">
+                    ${latestRelease.assets.map(asset => `
+                      <li class="download-item">
+                        <div class="file-info">
+                          <span class="file-name"><i class="fas fa-file"></i> ${escapeHtml(asset.name)}</span>
+                          <span class="file-size"><i class="fas fa-database"></i> ${formatFileSize(asset.size)}</span>
+                        </div>
+                        <div class="download-options">
+                          <a href="${asset.browser_download_url}" class="btn btn-secondary" target="_blank">
+                            <i class="fas fa-download"></i> 普通下载
+                          </a>
+                          <a href="${generateProxyUrl(asset.browser_download_url)}" 
+                             class="btn btn-primary" 
+                             target="_blank"
+                             onclick="showProviderNotification()">
+                            <i class="fas fa-bolt"></i> 国内线路
+                          </a>
+                        </div>
+                      </li>
+                    `).join('')}
+                  </ul>
+                </div>
+              </div>
+            `;
+            
+            // 创建弹窗
+            const modal = document.createElement('div');
+            modal.id = 'release-modal';
+            modal.className = 'release-modal';
+            modal.innerHTML = modalContent;
+            document.body.appendChild(modal);
+            
+            // 显示弹窗
+            modal.style.display = 'flex';
+            
+          } catch (error) {
+            showErrorNotification(`文件加载失败: ${error.message}`);
+          }
+        }
+
+        function closeReleaseModal() {
+          const modal = document.getElementById('release-modal');
+          if (modal) {
+            modal.remove();
+          }
+        }
+
+        function escapeHtml(unsafe) {
+          return unsafe.toString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+        }
+
+        function generateProxyUrl(url) {
+          return `https://edgeone.gh-proxy.org/${encodeURI(url)}`;
+        }
+
+        function formatFileSize(bytes) {
+          const units = ['Bytes', 'KB', 'MB', 'GB'];
+          if (bytes == 0) return '0 Bytes';
+          const exp = Math.floor(Math.log(bytes) / Math.log(1024));
+          return `${(bytes / Math.pow(1024, exp)).toFixed(2)} ${units[exp]}`;
+        }
+
+        function parseMarkdown(markdown) {
+          // 基本的 Markdown 解析
+          return markdown
+            // 标题
+            .replace(/^### (.*$)/gim, '<h5>$1</h5>')
+            .replace(/^## (.*$)/gim, '<h4>$1</h4>')
+            .replace(/^# (.*$)/gim, '<h3>$1</h3>')
+            // 粗体
+            .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+            // 斜体
+            .replace(/\*(.*)\*/gim, '<em>$1</em>')
+            // 列表
+            .replace(/^- (.*$)/gim, '<li>$1</li>')
+            .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+            // 链接
+            .replace(/\[([^\]]+)\]\(([^\)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
+            // 换行
+            .replace(/\n/g, '<br>');
+        }
+
+        // 错误提示功能
+        function showErrorNotification(message) {
+          const notification = document.createElement('div');
+          notification.className = 'error-notification';
+          notification.innerHTML = `
+            <div class="error-content">
+              <span><i class="fas fa-exclamation-circle"></i> ${escapeHtml(message)}</span>
+              <button class="close-button"><i class="fas fa-times"></i></button>
+            </div>
+          `;
+          document.body.appendChild(notification);
+          notification.querySelector('.close-button').onclick = () => notification.remove();
+          setTimeout(() => notification.remove(), 5000);
+          
+          // 样式
+          notification.style.position = 'fixed';
+          notification.style.bottom = '20px';
+          notification.style.right = '20px';
+          notification.style.backgroundColor = '#ffebee';
+          notification.style.color = '#c62828';
+          notification.style.padding = '15px 25px';
+          notification.style.borderRadius = '8px';
+          notification.style.zIndex = '10000';
+          notification.style.display = 'flex';
+          notification.style.alignItems = 'center';
+          notification.style.gap = '10px';
+          
+          const closeBtn = notification.querySelector('.close-button');
+          closeBtn.style.background = 'none';
+          closeBtn.style.border = 'none';
+          closeBtn.style.cursor = 'pointer';
+          closeBtn.style.color = '#c62828';
+          closeBtn.style.fontSize = '1.2rem';
+        }
+        
+        function showSuccessNotification(message) {
+          const notification = document.createElement('div');
+          notification.className = 'success-notification';
+          notification.innerHTML = `
+            <div class="success-content">
+              <span><i class="fas fa-check-circle"></i> ${escapeHtml(message)}</span>
+              <button class="close-button"><i class="fas fa-times"></i></button>
+            </div>
+          `;
+          document.body.appendChild(notification);
+          notification.querySelector('.close-button').onclick = () => notification.remove();
+          setTimeout(() => notification.remove(), 5000);
+          
+          // 样式
+          notification.style.position = 'fixed';
+          notification.style.bottom = '20px';
+          notification.style.right = '20px';
+          notification.style.backgroundColor = '#e8f5e9';
+          notification.style.color = '#2e7d32';
+          notification.style.padding = '15px 25px';
+          notification.style.borderRadius = '8px';
+          notification.style.zIndex = '10000';
+          notification.style.display = 'flex';
+          notification.style.alignItems = 'center';
+          notification.style.gap = '10px';
+          
+          const closeBtn = notification.querySelector('.close-button');
+          closeBtn.style.background = 'none';
+          closeBtn.style.border = 'none';
+          closeBtn.style.cursor = 'pointer';
+          closeBtn.style.color = '#2e7d32';
+          closeBtn.style.fontSize = '1.2rem';
+        }
+
+        function showProviderNotification() {
+          const notification = document.createElement('div');
+          notification.className = 'provider-notification';
+          notification.innerHTML = `
+            <div class="provider-content">
+              <span><i class="fas fa-info-circle"></i> 国内线路提供者：gh-proxy</span>
+              <p>使用 gh-proxy（EdgeOne） 代理服务，为您提供更快的下载速度</p>
+            </div>
+          `;
+          document.body.appendChild(notification);
+          setTimeout(() => notification.remove(), 3000);
+          
+          // 样式
+          notification.style.position = 'fixed';
+          notification.style.bottom = '20px';
+          notification.style.right = '20px';
+          notification.style.backgroundColor = '#e3f2fd';
+          notification.style.color = '#1565c0';
+          notification.style.padding = '15px 25px';
+          notification.style.borderRadius = '8px';
+          notification.style.zIndex = '10000';
+          notification.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+          
+          const providerContent = notification.querySelector('.provider-content');
+          providerContent.style.display = 'flex';
+          providerContent.style.flexDirection = 'column';
+          providerContent.style.gap = '8px';
+        }
+
+        // 获取最新Windows版本信息
+        async function fetchWindowsVersion() {
+          try {
+            const response = await fetch('https://api.github.com/repos/li2012China/Filesa-COChat/releases');
+            if (!response.ok) throw new Error('获取发布信息失败');
+            
+            const releases = await response.json();
+            // 过滤掉 pre-release 版本
+            const stableReleases = releases.filter(release => !release.prerelease);
+            if (stableReleases.length === 0) throw new Error('暂无正式版本');
+            const latestRelease = stableReleases[0];
+            
+            // 更新版本号
+            const versionElement = document.getElementById('windows-version');
+            if (versionElement) {
+              versionElement.textContent = latestRelease.tag_name;
+            }
+            
+            // 找到最大的EXE文件
+            const exeAssets = latestRelease.assets.filter(asset => asset.name.endsWith('.exe'));
+            if (exeAssets.length > 0) {
+              const largestExe = exeAssets.reduce((max, asset) => asset.size > max.size ? asset : max);
+              const sizeElement = document.getElementById('windows-size');
+              if (sizeElement) {
+                sizeElement.textContent = formatFileSize(largestExe.size);
+              }
+            }
+          } catch (error) {
+            console.error('获取Windows版本信息失败:', error);
+          }
+        }
+
+        // 获取所有正式发行版的更新日志
+        async function fetchChangelog() {
+          try {
+            const response = await fetch('https://api.github.com/repos/li2012China/Filesa-COChat/releases');
+            if (!response.ok) throw new Error('获取发布信息失败');
+            
+            const releases = await response.json();
+            // 过滤掉 pre-release 版本
+            const stableReleases = releases.filter(release => !release.prerelease);
+            const changelogList = document.getElementById('changelog-list');
+            
+            if (stableReleases.length === 0) {
+              changelogList.innerHTML = '<p class="no-releases">暂无正式发行版信息</p>';
+              return;
+            }
+            
+            // 构建更新日志内容
+            let changelogContent = '';
+            stableReleases.forEach(release => {
+              changelogContent += `
+                <div class="changelog-item">
+                  <div class="changelog-version">${escapeHtml(release.tag_name)}</div>
+                  <div class="changelog-date">${new Date(release.published_at).toLocaleDateString()}</div>
+                  ${release.body ? `
+                  <div class="changelog-body">${parseMarkdown(release.body)}</div>
+                  ` : '<div class="changelog-body"><p>无发行说明</p></div>'}
+                </div>
+              `;
+            });
+            
+            changelogList.innerHTML = changelogContent;
+          } catch (error) {
+            console.error('获取更新日志失败:', error);
+            const changelogList = document.getElementById('changelog-list');
+            changelogList.innerHTML = `<p class="error-text">加载失败: ${escapeHtml(error.message)}</p>`;
+          }
+        }
+
+        // 为下载按钮添加点击事件
+        document.addEventListener('DOMContentLoaded', function() {
+          const downloadButtons = document.querySelectorAll('.download-card .btn');
+          downloadButtons.forEach(button => {
+            if (!button.disabled) {
+              button.onclick = function(e) {
+                e.preventDefault();
+                fetchReleases();
+              };
+            }
+          });
+          
+          // 获取Windows版本信息
+          fetchWindowsVersion();
+          
+          // 获取更新日志
+          fetchChangelog();
+        });
+    </script>
+    <style>
+        /* 弹窗样式 */
+        .release-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .release-modal-content {
+            background-color: var(--bg-dark);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .release-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+        }
+
+        .release-modal-header h3 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .close-modal:hover {
+            color: var(--text-primary);
+        }
+
+        .release-modal-body {
+            padding: 32px;
+        }
+
+        .release-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .release-assets {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .download-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            margin-bottom: 16px;
+            background-color: var(--bg-card);
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .download-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-size: 15px;
+        }
+
+        .file-size {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .download-options {
+            display: flex;
+            gap: 12px;
+        }
+
+        .download-options .btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .release-description {
+            margin-bottom: 24px;
+            padding: 24px;
+            background-color: var(--bg-card);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .release-description h4 {
+            margin: 0 0 16px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .description-content {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .description-content h3 {
+            font-size: 18px;
+            margin: 15px 0 10px 0;
+            color: var(--primary-color);
+        }
+
+        .description-content h4 {
+            font-size: 16px;
+            margin: 12px 0 8px 0;
+            color: var(--primary-color);
+        }
+
+        .description-content h5 {
+            font-size: 14px;
+            margin: 10px 0 6px 0;
+            color: var(--primary-color);
+        }
+
+        .description-content ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .description-content li {
+            margin: 5px 0;
+        }
+
+        .description-content a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .description-content a:hover {
+            text-decoration: underline;
+        }
+
+        /* 更新日志样式 */
+        .no-releases,
+        .error-text {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .error-text {
+            color: var(--accent-red);
+        }
+
+        .changelog-body {
+            margin-top: 16px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .changelog-body h3 {
+            font-size: 16px;
+            margin: 15px 0 10px 0;
+            color: var(--primary-color);
+        }
+
+        .changelog-body h4 {
+            font-size: 14px;
+            margin: 12px 0 8px 0;
+            color: var(--primary-color);
+        }
+
+        .changelog-body ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .changelog-body li {
+            margin: 5px 0;
+        }
+
+        .changelog-body a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .changelog-body a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .download-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+
+            .download-options {
+                width: 100%;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .download-options .btn {
+                width: 100%;
+                text-align: center;
+                padding: 12px 24px;
+            }
+
+            .release-modal-header {
+                padding: 20px;
+            }
+
+            .release-modal-body {
+                padding: 24px;
+            }
+
+            .release-description {
+                padding: 20px;
+            }
+        }
+    </style>
 </body>
 </html>

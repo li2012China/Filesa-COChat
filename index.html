@@ -161,6 +161,16 @@
         </div>
     </section>
 
+    <!-- 最新更新 -->
+    <section class="latest-update">
+        <div class="container">
+            <h2 class="section-title">📢 最新更新</h2>
+            <div class="update-content" id="update-content">
+                <div class="loading-text"><i class="fas fa-spinner"></i> 加载更新信息中...</div>
+            </div>
+        </div>
+    </section>
+
     <!-- 下载区域 -->
     <section id="download" class="download">
         <div class="container">
@@ -175,7 +185,7 @@
                     </ul>
                 </div>
                 <div class="download-actions">
-                    <a href="https://github.com/li2012China/Filesa-COChat/releases/latest" target="_blank" class="btn btn-primary btn-large">
+                    <a href="download.html" class="btn btn-primary btn-large">
                         下载最新版本
                     </a>
                 </div>
@@ -288,5 +298,188 @@
     </footer>
 
     <script src="script.js"></script>
+    <script>
+        // 获取最新更新信息
+        async function fetchLatestUpdate() {
+            try {
+                const response = await fetch('https://api.github.com/repos/li2012China/Filesa-COChat/releases');
+                if (!response.ok) throw new Error('获取发布信息失败');
+                
+                const releases = await response.json();
+                // 过滤掉 pre-release 版本
+                const stableReleases = releases.filter(release => !release.prerelease);
+                if (stableReleases.length === 0) throw new Error('暂无正式版本');
+                
+                const latestRelease = stableReleases[0];
+                const updateContent = document.getElementById('update-content');
+                
+                // 构建更新内容
+                let updateHtml = `
+                    <div class="update-card">
+                        <div class="update-header">
+                            <h3><i class="fas fa-tag"></i> ${escapeHtml(latestRelease.name)}</h3>
+                            <span class="update-version">版本：${escapeHtml(latestRelease.tag_name)}</span>
+                        </div>
+                        <div class="update-date">
+                            <i class="fas fa-calendar-alt"></i> 发布时间：${new Date(latestRelease.published_at).toLocaleDateString()}
+                        </div>
+                        ${latestRelease.body ? `
+                        <div class="update-body">${parseMarkdown(latestRelease.body)}</div>
+                        ` : '<div class="update-body"><p>无更新说明</p></div>'}
+                    </div>
+                `;
+                
+                updateContent.innerHTML = updateHtml;
+            } catch (error) {
+                console.error('获取更新信息失败:', error);
+                const updateContent = document.getElementById('update-content');
+                updateContent.innerHTML = `<p class="error-text">加载失败: ${escapeHtml(error.message)}</p>`;
+            }
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe.toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function parseMarkdown(markdown) {
+            // 基本的 Markdown 解析
+            return markdown
+                // 标题
+                .replace(/^### (.*$)/gim, '<h5>$1</h5>')
+                .replace(/^## (.*$)/gim, '<h4>$1</h4>')
+                .replace(/^# (.*$)/gim, '<h3>$1</h3>')
+                // 粗体
+                .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                // 斜体
+                .replace(/\*(.*)\*/gim, '<em>$1</em>')
+                // 列表
+                .replace(/^- (.*$)/gim, '<li>$1</li>')
+                .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+                // 链接
+                .replace(/\[([^\]]+)\]\(([^\)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
+                // 换行
+                .replace(/\n/g, '<br>');
+        }
+
+        // 页面加载时获取最新更新信息
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchLatestUpdate();
+        });
+    </script>
+    <style>
+        /* 最新更新样式 */
+        .latest-update {
+            padding: 100px 0;
+            background-color: var(--bg-card);
+        }
+
+        .update-card {
+            background-color: var(--bg-dark);
+            padding: 32px;
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .update-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .update-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .update-header h3 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .update-version {
+            background-color: var(--bg-card);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .update-date {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .update-body {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .update-body h3 {
+            font-size: 18px;
+            margin: 15px 0 10px 0;
+            color: var(--primary-color);
+        }
+
+        .update-body h4 {
+            font-size: 16px;
+            margin: 12px 0 8px 0;
+            color: var(--primary-color);
+        }
+
+        .update-body h5 {
+            font-size: 14px;
+            margin: 10px 0 6px 0;
+            color: var(--primary-color);
+        }
+
+        .update-body ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .update-body li {
+            margin: 5px 0;
+        }
+
+        .update-body a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .update-body a:hover {
+            text-decoration: underline;
+        }
+
+        .loading-text {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .error-text {
+            text-align: center;
+            padding: 40px;
+            color: var(--accent-red);
+        }
+
+        @media (max-width: 768px) {
+            .update-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
 </body>
 </html>

@@ -1,5 +1,5 @@
 <p align="center">
-        <img src="https://github.com/li2012China/Filesa-COChat/blob/9f4654acf5ac7794e80627277d732c7c4877a571/web/coccbbig.png" width="400">
+        <img src="assets/logo.png" width="400">
 </p>
 <p align="center">
         <a href="https://github.com/li2012China/Filesa-COChat/releases/latest"><img src="https://img.shields.io/github/v/release/li2012China/Filesa-COChat"></a>

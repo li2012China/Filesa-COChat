@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>FilesaCOChat.WinUI</RootNamespace>
+    <AssemblyName>FilesaCOChat.WinUI</AssemblyName>
+    <!-- Keep in step with FilesaCOChat.Core/AppInfo.cs (Version 7.0). -->
+    <Version>7.0.0</Version>
+    <AssemblyVersion>7.0.0.0</AssemblyVersion>
+    <FileVersion>7.0.0.0</FileVersion>
+    <Product>Filesa COChat</Product>
+    <Company>Filesa</Company>
+    <UseWinUI>true</UseWinUI>
+    <!-- Unpackaged WinUI 3 desktop app: no MSIX required to run. -->
+    <WindowsPackageType>None</WindowsPackageType>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <!--
+      Self-contained Windows App SDK deployment: the WinAppRuntime DLLs are
+      unpacked next to the exe from the NuGet MSIX payload. This removes the
+      machine-wide Windows App Runtime / DDLM prerequisite, preserving the
+      original PyInstaller single-file "no install needed" behaviour.
+      It also disables the auto-injected MddBootstrapAutoInitializer (the
+      "This application requires the Windows App Runtime" dialog).
+    -->
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize>
+    <!-- Default to x64 but allow -r win-x86 / -r win-arm64 to override. -->
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <DefaultLanguage>zh-CN</DefaultLanguage>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250108002" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FilesaCOChat.Core\FilesaCOChat.Core.csproj" />
+  </ItemGroup>
+</Project>

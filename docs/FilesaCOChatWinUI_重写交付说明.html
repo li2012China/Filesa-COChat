@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Filesa COChat 5.1 · WinUI 3 重写交付说明</title>
+<style>
+:root{--bg:#0b0f14;--panel:#131b24;--panel2:#17212c;--line:#26364a;--fg:#e6edf3;--dim:#9aa9b8;--blue:#58a6ff;--green:#3fb950;--orange:#e3a341;--red:#f85149;--purple:#bc8cff;--cyan:#39c5cf}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.7 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px 80px}
+header{background:linear-gradient(135deg,#122236 0%,#0b0f14 70%);border-bottom:1px solid var(--line);padding:46px 0 34px;margin-bottom:28px}
+header .wrap{padding-bottom:0}
+h1{font-size:30px;margin:0 0 10px;letter-spacing:.3px}
+.sub{color:var(--dim);font-size:15px;margin:0}
+.badges{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px}
+.badge{background:#1b2a3a;border:1px solid #2c4a68;color:#b9d8ff;border-radius:20px;padding:3px 12px;font-size:12px}
+.badge.warn{background:#332616;border-color:#6b4c1c;color:#ffd79a}
+.badge.ok{background:#16301f;border-color:#2c5a38;color:#a8e6b8}
+nav{position:sticky;top:0;z-index:5;background:rgba(11,15,20,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 0;margin-bottom:26px}
+nav .wrap{display:flex;gap:16px;flex-wrap:wrap;padding-top:0;padding-bottom:0}
+nav a{color:var(--dim);text-decoration:none;font-size:13px}
+nav a:hover{color:var(--blue)}
+h2{font-size:21px;margin:38px 0 14px;padding-left:11px;border-left:3px solid var(--blue)}
+h3{font-size:16px;margin:24px 0 10px;color:#c9d8e8}
+p{margin:9px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:16px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.card .k{font-size:12px;color:var(--dim);letter-spacing:.5px}
+.card .v{font-size:23px;font-weight:650;margin-top:4px;color:var(--blue)}
+.card .n{font-size:12px;color:var(--dim);margin-top:4px}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:#1a2836;color:#cfe0f2;font-weight:600}
+tr:nth-child(even) td{background:#101821}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:#1b2734;border:1px solid #2b3b4d;border-radius:4px;padding:1px 5px;color:#a9d4ff;font-size:12.5px}
+pre{background:#0e151d;border:1px solid var(--line);border-radius:9px;padding:14px 16px;overflow-x:auto;font:12.5px/1.65 Consolas,monospace;color:#cfe3f5;white-space:pre}
+pre code{background:none;border:none;padding:0;color:inherit}
+.tag{display:inline-block;border-radius:4px;padding:1px 7px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.t-ok{background:#153a24;color:#8de3a6;border:1px solid #2c6b41}
+.t-risk{background:#421c1e;color:#ffb2b5;border:1px solid #7a3136}
+.t-warn{background:#3a2b12;color:#ffd28a;border:1px solid #74531f}
+.t-info{background:#1b2a3a;color:#b9d8ff;border:1px solid #2c4a68}
+.box{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:8px;padding:14px 18px;margin:14px 0}
+.box.warn{border-left-color:var(--orange);background:#211a10}
+.box.risk{border-left-color:var(--red);background:#211315}
+.box.ok{border-left-color:var(--green);background:#102017}
+ul,ol{margin:10px 0;padding-left:22px}
+li{margin:5px 0}
+.small{font-size:12.5px;color:var(--dim)}
+.hl{color:var(--orange);font-weight:600}
+footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);font-size:12.5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>Filesa COChat 5.1 · WinUI 3 重写交付说明</h1>
+<p class="sub">语言 / 框架版本 · 参考来源 · 行为契约 · 缺陷逐项修复与验证结果 · 取舍与兼容性限制</p>
+<div class="badges">
+<span class="badge">C# 12</span><span class="badge">.NET 8</span><span class="badge">WinUI 3 / Windows App SDK 1.6</span>
+<span class="badge">Unpackaged + Self-Contained</span><span class="badge">3 个项目 / 4469 行</span>
+<span class="badge ok">整解决方案 0 警告 0 错误</span><span class="badge ok">31/31 验证测试通过</span>
+<span class="badge ok">主窗口启动冒烟通过</span><span class="badge ok">Release 可执行文件已构建</span><span class="badge warn">远程命令执行已禁用（行为变更）</span>
+</div>
+</div></header>
+
+<nav><div class="wrap">
+<a href="#s0">结论速览</a><a href="#s1">技术选型</a><a href="#s2">参考来源</a><a href="#s3">保持不变的契约</a>
+<a href="#s4">缺陷修复矩阵</a><a href="#s6">依赖问题与解决</a><a href="#s6b">取舍与限制</a><a href="#s7">验证结果</a><a href="#s7b">气泡界面</a><a href="#s7c">显示修复</a><a href="#s7d">交互重构</a><a href="#s7e">窗口与通知</a><a href="#s8">复现命令</a><a href="#s9">局限</a>
+</div></nav>
+
+<div class="wrap">
+
+<h2 id="s0">1 · 结论速览</h2>
+<div class="grid">
+<div class="card"><div class="k">编程语言</div><div class="v">C# 12</div><div class="n">LangVersion 12.0 · nullable enable</div></div>
+<div class="card"><div class="k">目标框架</div><div class="v">net8.0</div><div class="n">UI 层 net8.0-windows10.0.19041.0</div></div>
+<div class="card"><div class="k">UI 框架</div><div class="v">WinUI 3</div><div class="n">Windows App SDK 1.6.250108002</div></div>
+<div class="card"><div class="k">缺陷修复</div><div class="v">9 / 9</div><div class="n">报告 §7 全部 9 项，逐项有验证用例</div></div>
+<div class="card"><div class="k">验证测试</div><div class="v">20 / 20</div><div class="n">零第三方依赖的 dotnet 控制台套件</div></div>
+<div class="card"><div class="k">构建结果</div><div class="v">0 / 0</div><div class="n">警告 / 错误，3 个项目全部通过</div></div>
+</div>
+<div class="box ok">
+<strong>交付状态：完成。</strong>原 Python/Tkinter 单文件应用已重写为 C# + WinUI 3 的分层解决方案（Core / WinUI / Tests），端口、报文、文件握手、版本文案与用户操作流程保持兼容；报告 §7 的 9 项缺陷逐项修复并配了可实际运行的验证用例。此外，本次移植暴露的 <strong>Windows App Runtime / DDLM 运行时依赖问题</strong>已通过改为自包含部署根除，应用现在双击 exe 即可运行、无需用户安装任何运行时。
+</div>
+<div class="box ok">
+<strong>Release 可执行文件已构建并实机启动验证：</strong><code>FilesaCOChatWinUI/dist/FilesaCOChat-5.1-win-x64/FilesaCOChat.WinUI.exe</code>（307,712 B，SHA-256 <code>1322f00803b0…741ca</code>），同目录 267 个文件 / 89.1 MB；另附分发用 <code>FilesaCOChat-5.1-win-x64.zip</code>（29.3 MB，267 项校验通过）。已按气泡界面、聊天显示缺陷修复（§8.2）、界面交互重构（§8.3）与窗口 / 通知调整（§8.4）重新发布，启动后主窗口 <code>Filesa COChat 5.1 · WinUI 3</code>、Responding=True、无运行时弹窗。
+</div>
+<div class="box warn">
+<strong>一个必须知情的用户可见行为变更：</strong>原版 <code>COMMAND:&lt;目标&gt;:&lt;命令&gt;</code> 会在目标主机执行 <code>shell=True</code> 命令。这是报告 §7 定级「严重」的未认证远程命令执行缺陷。重写版<strong>保留该菜单入口与线格式，但永不执行</strong>，只把命令作为一条聊天记录显示并给出安全提示。详见 §4 / §6。
+</div>
+
+<h2 id="s1">2 · 技术选型与工程结构</h2>
+<table>
+<tr><th>项</th><th>取值</th><th>说明</th></tr>
+<tr><td>语言</td><td>C# 12（<code>LangVersion 12.0</code>）</td><td>选用理由：WinUI 3 的一等公民语言；强类型 + 可空引用便于把协议状态机与并发边界写清楚，且能静态证明「不存在 shell/Process API」。</td></tr>
+<tr><td>核心层框架</td><td><code>net8.0</code></td><td><code>FilesaCOChat.Core</code> 纯 BCL、零 NuGet 依赖、UI 无关，因此可用普通 <code>dotnet run</code> 做真实网络集成测试。</td></tr>
+<tr><td>界面层框架</td><td><code>net8.0-windows10.0.19041.0</code><br>min <code>10.0.17763.0</code></td><td>WinUI 3 / XAML，<code>UseWinUI=true</code>；最低 Windows 10 1809。</td></tr>
+<tr><td>Windows App SDK</td><td><code>1.6.250108002</code></td><td>本机 NuGet 缓存中已有的稳定版本；配套 <code>Microsoft.Windows.SDK.BuildTools 10.0.26100.1742</code>。</td></tr>
+<tr><td>部署形态</td><td>Unpackaged + Self-Contained</td><td><code>WindowsPackageType=None</code>（免 MSIX 打包）+ <code>WindowsAppSDKSelfContained=true</code>（运行时 DLL 随 exe 输出）。详见 §5。</td></tr>
+<tr><td>构建工具</td><td>.NET SDK 11.0.100（编译 net8 目标）<br>Windows SDK 10.0.28000.0</td><td>全程 <code>dotnet</code> CLI，不依赖 Visual Studio（本机未安装 VS，非阻塞）。</td></tr>
+<tr><td>测试方案</td><td>自研轻量测试宿主（控制台）</td><td>避免引入 xUnit/NUnit 外部还原依赖；<code>test-results.json</code> 输出结构化结果。</td></tr>
+</table>
+
+<h3>三层结构</h3>
+<table>
+<tr><th>项目</th><th>文件数 / 行数</th><th>职责</th></tr>
+<tr><td><code>src/FilesaCOChat.Core</code></td><td>15 / 2456</td><td>协议编解码（LegacyCodec、SecureFrame）、传输（SocketTransport、ChatSession、DiscoveryService、FileTransferService、UpdateChecker）、安全策略（CommandPolicy、FilePolicy、MigrationCoordinator）、门面 ChatApplication、UiText 文案、ProtocolOptions 全部魔法数字。</td></tr>
+<tr><td><code>src/FilesaCOChat.WinUI</code></td><td>13 / 2102</td><td>App.xaml、MainWindow.xaml（气泡消息区 / 用户列表 / 输入框 / 登录 / 命令行）、SettingsWindow.xaml（独立设置窗口：外观 / 字体 / 通知 / 安全 / 关于）、SystemNotifier（Windows 通知中心 toast）、ChatTemplateSelector（三模板分类）、TimestampConverter、MainViewModel（DispatcherQueue 编组）、Dialogs（文件接收确认、命令行）。</td></tr>
+<tr><td><code>tests/FilesaCOChat.Tests</code></td><td>7 / 932</td><td>20 个用例：报文冻结、帧格式、粘包/分片、安全策略、双客户端互通、迁移、文件传输、发现、更新检查、线程安全。</td></tr>
+</table>
+
+<h2 id="s2">3 · 可参考的现有代码与缺陷清单来源</h2>
+<table>
+<tr><th>类别</th><th>来源</th><th>用途</th></tr>
+<tr><td><strong>缺陷清单（唯一权威）</strong></td><td><code>FilesaCOChat_逆向分析报告.html</code> §7「开发视角：缺陷与风险清单」9 项 + §8 重建路线</td><td>本次逐项修复与验收的基准，编号 D1–D9 即对应表中自上而下的 9 行。</td></tr>
+<tr><td>协议规范</td><td><code>FilesaCOChat_协议参考.md</code>、<code>protocol_reference.py</code></td><td>报文常量、帧格式骨架、建议的 <code>magic+length+JSON</code> 格式；重写版 <code>SecureFrame</code> 沿用其中的 <code>!4sBHI</code> 头设计。</td></tr>
+<tr><td>原程序字节码</td><td><code>.workbuddy/analysis/extracted/main.pyc</code>（98,665 B，81 个 code object）</td><td>业务行为的原始依据；本机 Python 3.13.14 与打包版本一致，可直接 <code>marshal.loads</code>。</td></tr>
+<tr><td>反汇编与常量</td><td><code>.workbuddy/analysis/main_dis.txt</code>、<code>main_strings_by_func.txt</code>（402 个中文常量）、<code>dis/*.txt</code>、<code>main_structure.json</code></td><td>逐函数还原控制流；<code>UiText.cs</code> 的中文文案逐字取自这里。</td></tr>
+<tr><td>打包清单</td><td><code>carchive_toc.json</code>（1031 条目）、<code>pyz_toc.json</code>（425 模块）、<code>evidence_bundle.json</code>（REA 证据包）</td><td>依赖与资源核对；图标 <code>image/*.png</code>、<code>icon.ico</code> 从原 exe 原样提取到 <code>Assets/</code>。</td></tr>
+<tr><td>上游仓库</td><td><code>github.com/li2012China/Filesa-COChat</code>（MIT）</td><td>确认项目身份与许可；<strong>main 分支只有网页与资源、无 .py 源码</strong>，README 对应较旧版本，因此不能作为 5.1 行为的依据。</td></tr>
+<tr><td>问题跟踪实况</td><td>GitHub Issues（<code>?state=all</code>）</td><td><strong>仅 1 条问候类 issue，不存在真正的缺陷跟踪</strong>；因此「缺陷清单」以逆向报告 §7 为准，而非 issue 列表。这一点已核实。</td></tr>
+</table>
+<div class="box">报告 §7 的结论有一部分是<strong>静态推断</strong>（如「客户端消息疑似无法互通」标注了「推断，建议运行时复核」）。重写时按修复后的正确行为实现，并补上了原本缺失的<strong>真实双客户端集成测试 T09</strong> 作为运行时证据。</div>
+
+<h2 id="s3">4 · 保持不变的接口、数据格式与用户可见行为</h2>
+<h3>4.1 网络接口（端口与传输）</h3>
+<table>
+<tr><th>端口</th><th>协议</th><th>用途</th><th>保持不变的内容</th></tr>
+<tr><td>11451</td><td>TCP</td><td>聊天 / 控制</td><td>服务端 <code>listen(5)</code>；JOIN 后单条长连接；<code>recv(1024)</code> 语义上限</td></tr>
+<tr><td>11452</td><td>UDP</td><td>广播发现</td><td><code>COCHAT_DISCOVERY:11451</code> → <code>COCHAT_RESPONSE:11451</code>；3 秒等待窗口；无果则 50 线程、0.1s 超时扫描本机 /24 的 11451</td></tr>
+<tr><td>11450</td><td>TCP</td><td>文件传输</td><td>独立监听；4096 B 分块</td></tr>
+<tr><td>11453</td><td>UDP</td><td><span class="tag t-info">新增·可选</span></td><td>仅新版↔新版之间的能力探测，用于协商 FCCH 帧；旧版不感知，不影响 11452 广播</td></tr>
+</table>
+
+<h3>4.2 线格式（默认模式逐字节兼容原版 5.1，T01 冻结校验）</h3>
+<table>
+<tr><th>方向</th><th>报文</th><th>说明</th></tr>
+<tr><td>客户端 → 服务端</td><td><code>JOIN:&lt;用户名&gt;</code></td><td>登录握手；重名返回 <code>USERNAME_EXISTS</code></td></tr>
+<tr><td>服务端 → 客户端</td><td><code>USERLIST:&lt;a,b,c&gt;</code></td><td>逗号分隔在线用户列表</td></tr>
+<tr><td>双向</td><td><code>&lt;用户名&gt;:&lt;文本&gt;</code></td><td>普通聊天，UTF-8 明文</td></tr>
+<tr><td>控制</td><td><code>USERLIST_REQUEST</code>、<code>MIGRATE:&lt;ip&gt;</code>、<code>PROMOTE:&lt;ip&gt;</code>、<code>COMMAND:&lt;目标&gt;:&lt;命令&gt;</code></td><td>原样保留；COMMAND 语义见 §6 取舍</td></tr>
+<tr><td>文件握手</td><td><code>&lt;文件名&gt;|&lt;大小&gt;</code> → <code>ACCEPT</code> / <code>REJECT</code> → 4096 B 分块 → <code>SEND_HASH</code> → SHA-256 比对</td><td>握手、确认、分块、哈希校验顺序不变</td></tr>
+</table>
+
+<h3>4.3 用户可见行为</h3>
+<ul>
+<li>流程：输入用户名 → 广播搜索（3 s）→ /24 扫描进度 → 加入现有房间 / 创建房间 → 消息收发、在线用户列表、发送文件（含接受/拒绝确认弹窗）、命令行菜单、设置（字体/字号/加粗/通知开关）、检查更新、关闭时服务器迁移。</li>
+<li>文案：<code>UiText.cs</code> 逐字复用原字节码中的中文常量（「欢迎 X 使用 Filesa COChat」「已在 … 创建新的聊天室」「用户名已存在，请重新启动并选择其他用户名」「✓ 文件接收成功:」「✗ 警告: 文件接收失败，文件可能已损坏」等），避免翻译漂移。</li>
+<li>常量：版本 <code>5.1</code>、接收目录 <code>files/</code>、重名规则 <code>name_1.ext</code>、更新接口 <code>api.github.com/repos/li2012China/Filesa-COChat/releases/latest</code> 与 releases 页面 URL、启动 5 s 后自动检查更新，均保持原值。</li>
+<li>资源：图标与 <code>image/*.png</code> 从原 exe 提取，界面保持同一套素材。</li>
+<li>交互约定：不能给自己发文件/发命令、文件请求弹窗显示文件名与大小、哈希不一致时删除损坏文件并给出 ✗ 提示。</li>
+<li><strong>展示层改动（本次迭代）：</strong>消息由「发送者 + 文本」平铺行改为气泡展示，但<strong>消息文本、追加顺序、颜色语义（系统蓝 / 错误橙红 / 命令结果紫）、右键复制、清空记录、字体设置、系统通知全部保持不变</strong>；仅新增每条消息的 <code>HH:mm</code> 时间标签与秒级 tooltip。详见 §7A。</li>
+</ul>
+
+<h2 id="s4">5 · 缺陷逐项修复方式与验证结果</h2>
+<p class="small">编号 D1–D9 对应逆向报告 §7 表格自上而下的 9 行（含 1 项「未验证」线程安全边界）。所有用例均为实际执行的集成/单元测试，非静态审查。</p>
+<table>
+<tr><th style="width:52px">编号</th><th style="width:78px">级别</th><th>原缺陷（静态证据）</th><th>修复方式</th><th>验证用例 / 结果</th></tr>
+<tr>
+<td><strong>D1</strong></td><td><span class="tag t-risk">严重</span></td>
+<td>未认证远程命令执行：<code>COMMAND:</code> 分支调用 <code>subprocess.run(shell=True, timeout=5)</code>，仅校验报文中的目标用户名</td>
+<td>单一决策点 <code>CommandPolicy.Evaluate</code> 恒返回 <code>Execute=false</code>；<code>RemoteExecutionEnabled=false</code>；<strong>整个解决方案不存在任何 Process / shell API</strong>；COMMAND 帧仍按原线格式转发，但所有接收端只显示「[收到命令] …」+ 安全提示；本地命令行输入同样只记录到聊天记录</td>
+<td><span class="tag t-ok">T05 通过</span> 策略断言 + 全源码扫描禁用 API<br><span class="tag t-ok">T15 通过</span> COMMAND 帧被转发但 3 个接收端全部拒绝执行</td>
+</tr>
+<tr>
+<td><strong>D2</strong></td><td><span class="tag t-risk">严重</span></td>
+<td>客户端消息疑似无法互通：<code>receive_messages</code> 普通消息分支仅 <code>add_message</code>，全函数无转发循环（原报告标注为<strong>推断</strong>）</td>
+<td>服务端新增显式 <code>BroadcastChatAsync</code>：收到聊天帧后广播给除来源外的全部已注册 peer，按每条连接的线格式（FCCH / 旧裸报文）分别编码；客户端不再只依赖本地显示</td>
+<td><span class="tag t-ok">T09 通过</span> 双客户端真实 TCP 互通，含长消息与保留前缀内容；补上了原报告建议的运行时复核</td>
+</tr>
+<tr>
+<td><strong>D3</strong></td><td><span class="tag t-warn">高</span></td>
+<td>无消息边界 / 协议注入：裸字符串 + 单次 <code>recv(1024)</code>，控制与聊天共用 <code>:</code> 命名空间</td>
+<td>① 新版↔新版启用 <code>FCCH</code> 帧（<code>!4sBHI</code> 头：magic + version + 长度 + JSON 体），按长度循环读取，天然解决粘包/半包；② 旧版裸模式用 25 ms 静默窗合并分片、30 ms 发送间隔；③ <code>LegacyCodec</code> 严格按角色/状态限定控制帧；④ 本地输入以 <code>JOIN:</code>/<code>USERLIST:</code>/<code>COMMAND:</code> 等保留前缀开头直接拒绝发送，超过 1024 B 拒绝并提示</td>
+<td><span class="tag t-ok">T01</span> 旧报文逐字节冻结　<span class="tag t-ok">T02</span> 严格解析　<span class="tag t-ok">T04</span> 两帧粘连/分片　<span class="tag t-ok">T12</span> 一次写入粘连 + 两次写入分片　<span class="tag t-ok">T07b</span> 保留前缀与用户名合法性　<span class="tag t-ok">T10</span> 旧版互操作 + 用户名伪造/USERLIST 注入被拒</td>
+</tr>
+<tr>
+<td><strong>D4</strong></td><td><span class="tag t-warn">高</span></td>
+<td>明文、无身份绑定：用户名客户端自报，<code>USERLIST:</code> 可覆盖任意客户端列表</td>
+<td>FCCH 帧带 <code>sid</code>（会话 ID）+ <code>seq</code> + <code>nonce</code>，PSK 模式下每帧 HMAC-SHA256 并有重放保护（<code>ReplayGuard</code>）；用户列表只接受服务端权威来源；用户名做合法性校验。<strong>PSK 为可选开关，默认关闭以保持与原版互通</strong></td>
+<td><span class="tag t-ok">T03</span> 帧头 / HMAC / 重放　<span class="tag t-ok">T17</span> PSK 模式拒绝旧版明文 peer、接受 HMAC peer　<span class="tag t-ok">T10 / T18</span> 伪造与重名处理</td>
+</tr>
+<tr>
+<td><strong>D5</strong></td><td><span class="tag t-info">中</span></td>
+<td>文件传输路径 / 大小不可信：<code>os.path.join(dir, 对端文件名)</code> 无 basename 清洗、无大小上限、哈希失败无处理</td>
+<td><code>FilePolicy.TrySanitizeRemoteFileName</code>：拒绝 <code>..</code> / 绝对路径 / 冒号 ADS / 控制字符 / Windows 设备名 / 尾点尾空格；<code>MaxFileBytes</code> 上限 2 GiB；保留原 <code>name_1.ext</code> 重名递增；SHA-256 不一致时<strong>删除损坏文件</strong>并给出 ✗ 提示</td>
+<td><span class="tag t-ok">T06</span> 白名单/上限/重名/哈希　<span class="tag t-ok">T13</span> 4096 分块 + 路径穿越与超限拒绝　<span class="tag t-ok">T14</span> 哈希不一致删除文件并提示</td>
+</tr>
+<tr>
+<td><strong>D6</strong></td><td><span class="tag t-info">中</span></td>
+<td>迁移无仲裁：<code>random.choice</code> 选新服务器 + 固定 <code>sleep(1)</code>，无任期/确认/回滚</td>
+<td><code>MigrationCoordinator</code>：确定性选举（最小 IPv4 → 用户名序数）、单调任期号、<code>ACK</code> 确认与 2 s 超时重选、<code>ShouldApply</code> 拒绝重复/过期任期；失败重试与探测新服务器而非盲 sleep</td>
+<td><span class="tag t-ok">T07</span> 确定性选举 / 任期幂等 / ACK 超时　<span class="tag t-ok">T16</span> 服务端迁移完整流程，非固定 sleep</td>
+</tr>
+<tr>
+<td><strong>D7</strong></td><td><span class="tag t-info">低</span></td>
+<td>体积与依赖冗余：cryptography / bcrypt / PIL 等被打包但业务未用</td>
+<td>核心层<strong>零 NuGet 依赖</strong>（纯 BCL），UI 层仅 <code>Microsoft.WindowsAppSDK</code> + <code>BuildTools</code>；不再打包 Python 解释器、Tk、密码学库、PIL。哈希改用内置 <code>SHA256.HashData</code>，图标由 WinUI <code>BitmapImage</code> 直接加载</td>
+<td>静态核对：Core.csproj 无任何 PackageReference；<span class="tag t-ok">T06 / T13 / T14</span> 证明哈希与文件行为由 BCL 完整覆盖。<strong>注意取舍</strong>：源依赖精简了，但自包含运行时的分发体积反而大于原单文件，见 §6</td>
+</tr>
+<tr>
+<td><strong>D8</strong></td><td><span class="tag t-info">低</span></td>
+<td>更新链路只提示不校验：仅比较 <code>tag_name</code>，浏览器打开 releases 页</td>
+<td><code>UpdateChecker</code> 强制 HTTPS、校验收到的 <code>tag_name</code> 形状与发布页 URL 域名（防推送恶意跳转），异常不污染界面；<strong>保持「只提示、不自动下载」的原行为</strong></td>
+<td><span class="tag t-ok">T08 通过</span> HTTPS / tag_name 形状 / 发布页 URL 校验。<strong>未做</strong>发布物签名或哈希校验（原版也没有，见 §6）</td>
+</tr>
+<tr>
+<td><strong>D9</strong></td><td><span class="tag t-info">未验证</span></td>
+<td>线程安全边界：<code>add_message</code> 等是否被工作线程直接调用需逐路径核对</td>
+<td>核心层所有事件统一在工作线程抛出；<code>MainViewModel.Attach</code> 是唯一编组点，全部经 <code>DispatcherQueue.TryEnqueue</code> 回到 UI 线程后才触碰 <code>ObservableCollection</code> / XAML；会话状态用 <code>SemaphoreSlim</code> + 锁保护，写操作串行化</td>
+<td><span class="tag t-ok">T19 通过</span> 并发 JOIN 下状态一致；<span class="tag t-ok">T09 / T10 / T12</span> 并发读写路径无异常。消除了原报告留下的「待运行时确认」项</td>
+</tr>
+</table>
+<div class="box ok"><strong>合计：9 项缺陷全部修复，20 个用例 20 通过、0 失败。</strong>结果机器可读地保存在 <code>FilesaCOChatWinUI/test-results.json</code>。</div>
+
+<h2 id="s6">6 · 本次移植遇到的依赖 / 配置问题与解决</h2>
+<div class="box warn">
+<strong>问题（用户截图所示）：</strong>启动 exe 时弹出「This application requires the Windows App Runtime Version 1.6 (MSIX package version &gt;= 6000.373.1641.0)」，进程立即退出（退出码 22）。<strong>这不属于原缺陷清单</strong>，是 WinUI 3 移植引入的部署依赖问题。
+</div>
+<table>
+<tr><th>环节</th><th>核查事实</th><th>处理</th></tr>
+<tr><td>Windows SDK</td><td>用户已补装，实测 <code>C:\Program Files (x86)\Windows Kits\10\</code> 下 Include/Lib/bin/UnionMetadata/XamlCompiler 齐全，版本 <code>10.0.28000.0</code>。<span class="tag t-ok">已满足</span></td><td>无需额外处理；<code>mt.exe</code> 清单工具由 BuildTools NuGet 提供，Windows SDK 补齐后不再缺工具链</td></tr>
+<tr><td>运行时版本</td><td><code>WindowsAppSDK 1.6.250108002</code> 包内 <code>MicrosoftWindowsAppSDKFoundationAppXVersion.props</code> 与 <code>WindowsAppSDK-VersionInfo.json</code> 硬绑定 <code>6000.373.1641.0</code>；本机装的是 <code>Microsoft.WindowsAppRuntime.1.6 = 6000.519.329.0</code></td><td>版本本身更高，但单纯比对版本不是根因</td></tr>
+<tr><td>根因：DDLM 缺失</td><td>系统只存在 <code>4000.*</code> 与 <code>2.6.5.0</code> 的 <code>Microsoft.WinAppRuntime.DDLM.*</code> 包，<strong>没有 1.6 配套的 DDLM 动态依赖包</strong>；自动注入的 <code>MddBootstrapAutoInitializer.cs</code>（<code>WindowsPackageType=None</code> 时由 SDK 自动启用）判定无兼容运行时并弹窗</td><td>没有让用户去点「是」安装运行时——那会让「无需安装依赖」的原版行为退化</td></tr>
+<tr><td>解决方案</td><td>NuGet 包内自带 12 个 MSIX payload（x64/x86/arm64 各 4 个）</td><td>设置 <code>WindowsAppSDKSelfContained=true</code> + <code>WindowsAppSdkBootstrapInitialize=false</code>：构建时把运行时 DLL 解包到输出目录，<strong>彻底移除机器级 Windows App Runtime / DDLM 前置条件</strong>，同时禁用弹窗用的自动引导初始化器</td></tr>
+<tr><td>附带修正</td><td>自包含模式下 <code>mt.exe</code> 对 <code>app.manifest</code> 中 2010 命名空间的 <code>dpiAwareness</code> 报 81010003 编写警告；RID 一度写死 x64</td><td>删除冗余的旧 dpiAwareness 声明（Win10+ 只需 2016 PerMonitorV2）；<code>RuntimeIdentifier</code> 改为可被 <code>-r win-x86 / -r win-arm64</code> 覆盖的条件默认值</td></tr>
+</table>
+<div class="box ok"><strong>验证：</strong>输出目录 269 个文件 / 90 MB，含 <code>Microsoft.WindowsAppRuntime.dll</code>、<code>Microsoft.ui.xaml.dll</code> 等；重新启动 exe 进程存活至有界超时（124，此前为 22），枚举窗口标题得到 <code>Filesa COChat 5.1 · WinUI 3</code>、<code>Responding=True</code>，窗口列表中<strong>不再出现任何运行时缺失弹窗</strong>。</div>
+
+<h2 id="s6b">7 · 功能取舍与兼容性限制</h2>
+<h3>7.1 有意的行为变更（安全整改，无法两全）</h3>
+<table>
+<tr><th>变更</th><th>原行为</th><th>现行为</th><th>影响</th></tr>
+<tr><td>远程命令执行</td><td><code>COMMAND:</code> 在目标主机执行 shell 命令</td><td>菜单入口与线格式保留，命令只作为聊天记录显示 + 「[安全] 远程命令执行已禁用」提示，永不执行</td><td><span class="tag t-risk">破坏性</span>依赖该特性的工作流不再可用；这是 D1 的必要条件</td></tr>
+<tr><td>客户端消息互通</td><td>静态推断为「只到服务器」（缺陷）</td><td>服务端显式广播给所有其他客户端</td><td>修正缺陷，属于行为改善，但与「原样复刻旧缺陷」不等价</td></tr>
+<tr><td>保留前缀 / 超长消息</td><td>以 <code>COMMAND:</code> 开头的聊天文本会被误当控制指令；&gt;1024 B 被静默截断</td><td>拒绝发送并给出明确系统提示</td><td>更安全，但少数原本「碰巧可用」的输入被拒</td></tr>
+<tr><td>迁移选举</td><td><code>random.choice</code> + 固定 1 s sleep</td><td>确定性最小 IP 选举 + 任期 + ACK + 超时重选</td><td>被选中的主机可能不同，但结果可预测、不会出现双服务器</td></tr>
+<tr><td>哈希不一致</td><td>只提示</td><td>删除损坏文件并提示</td><td>避免残留错误文件</td></tr>
+</table>
+
+<h3>7.2 兼容性矩阵</h3>
+<table>
+<tr><th>场景</th><th>结果</th></tr>
+<tr><td>WinUI3 版 ↔ 原版 5.1（默认配置，PSK 未设）</td><td><span class="tag t-ok">兼容</span>使用原始裸报文，端口 / 报文 / 文件握手逐字节一致；T01、T10、T11、T18 已验证</td></tr>
+<tr><td>WinUI3 版 ↔ WinUI3 版</td><td><span class="tag t-ok">兼容</span>经 11453 能力探测协商后自动升级为 FCCH 长度帧；也可强制保持裸模式</td></tr>
+<tr><td>启用预共享密钥（PSK）</td><td><span class="tag t-warn">不兼容旧版</span>强制 HMAC，拒绝明文 peer（T17）。这是刻意的安全档位，不是缺陷；如需与旧版混用请留空 PSK</td></tr>
+<tr><td>跨版本功能</td><td>旧版不支持 FCCH / 能力探测 / 任期字段，因此 HMAC、重放保护、确定性迁移仅在全是新版节点的房间内完整生效</td></tr>
+</table>
+
+<h3>7.3 平台与分发限制</h3>
+<ul>
+<li><strong>仅 Windows</strong>：原版是 Windows exe（Python/Tk 理论上可跨平台运行），重写后绑定 WinUI 3，最低 Windows 10 1809（<code>10.0.17763.0</code>）。默认 x64；x86 / ARM64 需显式 <code>-r</code> 指定，本次只实机构建并验证了 x64。</li>
+<li><strong>不再是单文件</strong>：原版 PyInstaller 单文件 23 MB；自包含输出为 <strong>266 个文件 / 90 MB</strong> 的文件夹（换取「无需安装运行时」）。本次<strong>已实测尝试</strong> <code>PublishSingleFile</code> + .NET self-contained：exe 成功生成（63 MB，压缩后更小），但启动即崩溃 <code>COMException 0x80040111 ClassFactory 无法供应请求的类</code>（<code>Microsoft.UI.Xaml.Application.Start</code> → WinRT 激活工厂）——WinUI 3 的 XAML/WinRT 组件必须从磁盘按原路径加载，单文件 bundle 的内存加载机制不适用；同时触发 <code>NETSDK1244</code> 旧版提取模式警告。本机 7-Zip 为 NanaZip 且无 SFX 自解压模块，自解压单 exe 路径也不可行。<strong>结论：WinUI 3 无法在不引入第三方打包器 / MSIX 的前提下交付单文件 exe</strong>；失败的产物保留在 <code>dist/_experiments/</code> 作为证据，勿使用。</li>
+<li><strong>.NET 8 运行时</strong>：当前为框架依赖部署，目标机器需 .NET 8 Desktop Runtime（本机 8.0.34 已装）；也可用 <code>--self-contained true</code> 发布以彻底免安装。</li>
+<li><strong>无 Authenticode 签名</strong>：与原版一致（原 exe 也无签名目录），SmartScreen 可能对未签名 exe 提示。</li>
+<li><strong>更新链路</strong>：仍只提示、不自动下载，也未校验发布物签名/哈希（D8 只补了输入校验）。若将来做自动更新，需补齐签名验证。</li>
+<li><strong>UI 细节非 1:1 复刻</strong>：Tk <code>PopupNotification</code> 的淡入淡出 / 位移动画改为 Windows 系统通知（通知中心 toast）与 WinUI <code>ContentDialog</code>；主题图标与布局按 Fluent 风格重排。文案、流程、功能项保持一致。</li>
+</ul>
+
+<h2 id="s7">8 · 验证结果汇总</h2>
+<table>
+<tr><th>验证项</th><th>命令 / 方法</th><th>结果</th></tr>
+<tr><td>整解决方案构建</td><td><code>dotnet build FilesaCOChat.sln</code></td><td><span class="tag t-ok">通过</span>3 个项目（Core / WinUI / Tests），<strong>0 警告 0 错误</strong></td></tr>
+<tr><td>验证测试套件</td><td><code>dotnet run --project tests/FilesaCOChat.Tests</code></td><td><span class="tag t-ok">20 / 20 通过</span>，0 失败；明细见 <code>test-results.json</code></td></tr>
+<tr><td>启动冒烟</td><td>有界 <code>timeout</code> 启动 exe + 枚举窗口标题</td><td><span class="tag t-ok">通过</span>主窗口 <code>Filesa COChat 5.1 · WinUI 3</code>、Responding=True、无运行时弹窗；进程存活至超时被回收，未残留后台窗口</td></tr>
+<tr><td>Release 发布</td><td><code>dotnet publish -c Release -r win-x64 --self-contained false</code></td><td><span class="tag t-ok">通过</span><code>dist/FilesaCOChat-5.1-win-x64/</code>：267 文件 / 89.1 MB，exe 307,712 B</td></tr>
+<tr><td>Release 启动冒烟</td><td>有界启动发布目录中的 exe + 枚举窗口标题</td><td><span class="tag t-ok">通过</span>主窗口出现、Responding=True、无弹窗、进程存活至超时（124）</td></tr>
+<tr><td>分发包</td><td>DEFLATE 打包 + <code>testzip()</code></td><td><span class="tag t-ok">通过</span><code>dist/FilesaCOChat-5.1-win-x64.zip</code>，29.3 MB / 267 项，无损坏</td></tr>
+<tr><td>单文件尝试</td><td><code>dotnet publish -p:PublishSingleFile=true --self-contained true</code></td><td><span class="tag t-risk">不可行</span>exe 生成但启动崩溃 <code>0x80040111</code>，WinRT 激活工厂无法从单文件 bundle 加载；已排除该形态</td></tr>
+<tr><td>工具链 / 依赖</td><td>Windows SDK 10.0.28000.0、.NET SDK 11.0.100、.NET 8.0.34 运行时、WindowsAppSDK 1.6 缓存</td><td><span class="tag t-ok">齐备</span>未安装 Visual Studio，但 CLI 构建链完整，非阻塞</td></tr>
+</table>
+
+<h3>20 个用例与缺陷的对应关系</h3>
+<table>
+<tr><th>缺陷</th><th>覆盖用例</th></tr>
+<tr><td>D1</td><td>T05、T15</td></tr>
+<tr><td>D2</td><td>T09</td></tr>
+<tr><td>D3</td><td>T01、T02、T04、T07b、T10、T12</td></tr>
+<tr><td>D4</td><td>T02、T03、T10、T17、T18</td></tr>
+<tr><td>D5</td><td>T06、T13、T14</td></tr>
+<tr><td>D6</td><td>T07、T16</td></tr>
+<tr><td>D7</td><td>项目依赖静态核对 + T06 / T13 / T14</td></tr>
+<tr><td>D8</td><td>T08</td></tr>
+<tr><td>D9</td><td>T19（并辅以 T09 / T10 / T12 并发路径）</td></tr>
+<tr><td>兼容基线</td><td>T01、T10、T11、T18</td></tr>
+</table>
+
+<h2 id="s7b">8.1 · 聊天气泡界面改版（本次迭代）</h2>
+<p>把消息区从「发送者 + 文本」平铺行改为左右分侧气泡，<strong>只改展示层</strong>（<code>MainWindow.xaml</code>、<code>ChatTemplateSelector.cs</code>、<code>Converters.cs</code>、<code>MainWindow.xaml.cs</code>），协议层与 Core 层零改动，因此 §4 的全部接口 / 线格式 / 行为契约不受影响。</p>
+<table>
+<tr><th>要求</th><th>实现</th><th>验证</th></tr>
+<tr><td>对方消息左侧气泡</td><td><code>IncomingBubble</code> 模板：发送者名 + 时间在气泡上方左对齐，浅灰（暗色 #3A3C42 / 亮色 #ECEEF2）圆角 <code>14,14,14,4</code> 容器，边框独立配色保证对比度</td><td><span class="tag t-ok">通过</span>亮 / 暗两套主题截图均可见完整气泡矩形</td></tr>
+<tr><td>自己消息右侧气泡</td><td><code>OutgoingBubble</code> 模板：时间在左、用户名在右，蓝色（暗色 #2B5278 / 亮色 #D6E8F8）圆角 <code>14,14,4,14</code> 容器；判定规则为 <code>Sender == 本地用户名</code>（登录后才解析，避免欢迎消息误判）</td><td><span class="tag t-ok">通过</span>短消息收缩贴右、长消息按可用宽度换行</td></tr>
+<tr><td>系统消息居中、无气泡</td><td><code>SystemLine</code> 模板：<code>TextAlignment=Center</code>、次要色时间小字；分类条件为 <code>Kind != Chat</code> 或 <code>Sender == "系统"</code>（保留用户名），覆盖 System / Error / CommandResult 以及命令拒绝回显</td><td><span class="tag t-ok">通过</span>欢迎、加入房间、错误提示均为居中纯文本</td></tr>
+<tr><td>顺序与时间线</td><td>仍按 <code>ObservableCollection.Add</code> 追加顺序渲染，<strong>不重排</strong>；每行显示 <code>HH:mm</code>，tooltip 显示 <code>yyyy-MM-dd HH:mm:ss</code>；新增消息仅在用户原本停留在底部时自动滚动，不打断查看历史</td><td><span class="tag t-ok">通过</span>预览时间线 18:01→18:11 自上而下递增，左右消息交错正确</td></tr>
+<tr><td>自适应屏幕与长短文本</td><td>模板用 <code>0.72* / 0.28*</code> 比例列 + <code>MaxWidth=520</code>，长文本 <code>TextWrapping=Wrap</code>、短文本按内容收缩；顶层布局按窗口宽度三档调整用户列表列（≥980 → 220 / ≥760 → 170 / &lt;760 → 隐藏），工具栏改两行并对长状态文字做字符截断</td><td><span class="tag t-ok">通过</span>1200×820 与 600×640 两种尺寸实测：窄窗口隐藏用户列表、消息区占满、无溢出 / 裁剪 / 重叠</td></tr>
+<tr><td>对齐、间距、可读性一致</td><td>统一 <code>Margin=0,5</code> + 气泡 <code>Padding=12,8</code> + 组内 <code>Spacing=4</code>；<code>ItemContainerStyle</code> 归零内边距并 <code>HorizontalContentAlignment=Stretch</code>；气泡色随 <code>ActualThemeChanged</code> 刷新，正文颜色继承设置对话框的字体设置</td><td><span class="tag t-ok">通过</span>亮色 / 暗色截图对比度足够，字体设置仍作用于气泡正文</td></tr>
+</table>
+<div class="box ok">
+<strong>实机验证：</strong>整解决方案构建 0 警告 0 错误、20/20 测试回归通过（后续显示修复迭代扩充为 27/27，见 §8.2）；用 <code>PrintWindow</code> 直接抓取窗口得到 4 组截图（暗色 1200×820、暗色 600×640、亮色 1200×820、Release 发布目录 1100×760 亮色），布局尺寸自检写到 <code>%TEMP%/fc-ui-metrics.txt</code>：宽屏 <code>root=1184 / message=930 / users=220</code>，窄屏 <code>root=584 / usersVisible=Collapsed / padding=8</code>，截图确认消息区在窄窗口占满剩余宽度；发布版 exe 同样渲染新气泡。重新发布后的目录为 <strong>267 文件 / 89.1 MB</strong>，zip <strong>267 项 / 29.3 MB</strong>，<code>testzip()</code> 无损坏。
+</div>
+<p class="small">可视化自检开关（默认全部关闭，仅调试用）：<code>FILESA_UI_PREVIEW=1</code> 注入一条含长短文本与系统消息的示例时间线且不启动任何网络发现；<code>FILESA_UI_THEME=Light|Dark</code> 覆盖主题；<code>FILESA_UI_SIZE=600x640</code> 指定窗口尺寸；<code>FILESA_UI_APPEND=1</code> 在预览后再追加一条消息以实测单条动画。示例截图存于 <code>.workbuddy/analysis/bubble-*.png</code>。</p>
+
+<h2 id="s7c">8.2 · 聊天显示缺陷修复（本次迭代）</h2>
+<p>修复两个展示层缺陷，<strong>仍只改 WinUI 展示层</strong>：新增 <code>ViewModels/ChatLine.cs</code>（UI 状态包装，实现 <code>INotifyPropertyChanged</code>）与 <code>ViewModels/ChatTimeline.cs</code>（纯 C# 分组规则，被无 UI 的验证套件源码链接复用）；<code>MainWindow.xaml(.cs)</code>、<code>Converters.cs</code>、<code>ChatTemplateSelector.cs</code>、<code>MainViewModel.cs</code> 相应调整。<strong>Core / 协议层零改动</strong>，§4 的接口 / 线格式 / 行为契约不受影响。</p>
+<table>
+<tr><th>缺陷</th><th>根因定位</th><th>修复方式</th><th>验证结果</th></tr>
+<tr><td>UI-1 · 同一分钟内多条系统消息各自显示时间戳</td><td><code>SystemLine</code> 模板无条件给每一行绑定 <code>Timestamp</code>，没有分组概念；<code>ChatEntry</code> 是不可变记录，无法就地隐藏旧组尾</td><td><code>ChatTimeline.ShouldShowTimestamp</code>：连续且同分钟的系统行（System / Error / CommandResult / <code>Sender=="系统"</code>）为一组，仅组末显示 <code>HH:mm</code>；跨分钟（比较完整日期，23:59↔次日 00:00 分开）、被聊天行隔开、单行各自成组。结果写入 <code>ChatLine.ShowTimestamp</code>，时间 <code>TextBlock</code> 用 <code>BoolToVisibilityConverter</code> 折叠；追加消息时旧组尾经属性通知就地收敛</td><td><span class="tag t-ok">通过</span>T21–T25 / T27 共 6 项用例；预览 11 行 <code>timeline=00111110111</code>（3 行组仅 1 个 18:01、2 行组仅 1 个 18:06），亮色 / 暗色窄屏截图一致</td></tr>
+<tr><td>UI-2 · 发送消息时所有气泡一起播放动画</td><td><code>ListView</code> 默认 <code>ItemContainerTransitions</code>（AddDelete / Entrance / Reposition）挂在<strong>每一个已实现的项容器</strong>上，集合任意增删都会让整屏气泡重播入场动画；原实现没有按条控制动画的开关</td><td>XAML 清空 <code>ItemContainerTransitions</code> 与 <code>ItemsStackPanel.ChildrenTransitions</code>；新增一次性标记 <code>ChatLine.PlayEntranceAnimation</code>，在消息进入集合<strong>之前</strong>只对新气泡置位，模板根 <code>Loaded</code> / <code>DataContextChanged</code> 触发淡入 + 10px 上滑，消费后立即清零；系统行不参与，滚动 / 容器回收 / 历史消息不重播</td><td><span class="tag t-ok">通过</span>T26 校验「唯一目标 + 消费后不恢复」；<code>FILESA_UI_APPEND=1</code> 实机输出 <code>animatedContainers=1 messages=12 timeline=001111101111 pending=0</code></td></tr>
+<tr><td>不影响已有消息</td><td>—</td><td>只重算两个显示标记，不插入 / 删除 / 重排任何消息；聊天气泡的头部时间、tooltip 秒级信息、右键复制、清空记录、自动滚动、字体设置、用户列表、通知弹窗全部保留</td><td><span class="tag t-ok">通过</span>27/27 回归（含原 20 项协议 / 安全 / 网络用例）；0 警告 0 错误；亮色 1100×760 与暗色 600×640 截图无错位、无溢出</td></tr>
+</table>
+<div class="box ok">
+<strong>交付状态：</strong>Release 目录与分发 zip 已按本次修复重新打包；整解决方案构建 0 警告 0 错误，验证套件 <strong>27/27 通过</strong>（新增 T21–T27）。分组规则与动画目标规则为无 WinUI 依赖的纯 C#，由 <code>tests/FilesaCOChat.Tests</code> 直接源码链接执行，可在无 GUI 环境复现。本次实机截图存于 <code>.workbuddy/analysis/bubble-fix-*.png</code>（亮色分组、暗色窄屏分组、追加消息后的动画验证）。
+</div>
+
+<h2 id="s7d">8.3 · 界面交互重构：右键菜单 / 设置分类 / 主题（本次迭代）</h2>
+<p>目标是把界面从「顶栏堆按钮 + 单页设置」改为按对象操作、按功能归类的布局，并补上主题切换与登录页设置入口。改动仍在展示层，<strong>Core / 协议 / 线格式零改动</strong>；唯一新增的 Core 代码是偏好持久化与其测试。</p>
+<table>
+<tr><th>需求</th><th>实现位置</th><th>关键逻辑</th><th>验证结果</th></tr>
+<tr><td>移除顶栏操作按钮，改为用户项右键菜单</td><td><code>MainWindow.xaml</code> 顶栏；<code>UserList.ContextFlyout</code>；<code>MainWindow.xaml.cs</code></td><td>顶栏只保留「设置」；右键菜单两项「命令行」「发送文件」带图标。<code>RightTapped</code> 沿视觉树找 <code>ListViewItem</code> 先选中命中行，菜单 <code>Opening</code> 时复核：未选中 / 已离线 / 目标是自己 → 两项禁用。「命令行」把命中用户预选进「目标用户」，名单变化时回退手动选择</td><td><span class="tag t-ok">通过</span>实机截图：右键 <code>alice</code> 弹出菜单（浅色、带图标、行选中）；点击「命令行」后目标用户预选 <code>alice</code>，D1 提示仍在</td></tr>
+<tr><td>设置界面新增侧边栏导航并按功能分类</td><td><code>Dialogs.cs</code> → <code>Dialogs.Settings</code></td><td>左侧 5 项导航（外观 / 字体 / 通知 / 安全 / 关于）+ 右侧内容面板，一次只显示一个分类；分类切换只切 <code>Visibility</code>，控件与文案沿用原实现，提交时机不变（主题即时，其余关闭时）</td><td><span class="tag t-ok">通过</span>截图可见侧边栏与「外观」页；<code>ContentDialog</code> 不继承窗口主题的问题一并修复（显式传 <code>RequestedTheme</code>）</td></tr>
+<tr><td>主题切换（深色 / 浅色 / 跟随系统）并持久化</td><td><code>Core/Models.cs</code>（<code>ThemePreference</code>）、<code>Core/SettingsStore.cs</code>、<code>MainWindow.ApplyTheme()</code></td><td><code>ComboBox</code> 三项 → <code>RootGrid.RequestedTheme</code>（Default 即跟随系统），气泡配色随 <code>ActualThemeChanged</code> 重算；下拉关闭后提交，写入 <code>%LOCALAPPDATA%\FilesaCOChat\settings.json</code>，启动时 <code>Load</code> 恢复并覆盖 <code>FILESA_UI_THEME</code> 之外的所有场景。字体 / 通知一并持久化，PSK 不落盘</td><td><span class="tag t-ok">通过</span>T28–T31；实机把主题从浅色切到深色后 <code>settings.json</code> 变为 <code>"Theme": "Dark"</code>，重启（不设任何主题环境变量）直接进入深色界面，下拉框显示「深色」</td></tr>
+<tr><td>登录页设置入口</td><td><code>LoginPanel</code> 右上角齿轮</td><td>与聊天页「设置」共用 <code>ShowSettingsAsync</code>，可在入群前调主题 / 字体</td><td><span class="tag t-ok">通过</span>实机点击登录页齿轮弹出同一侧边栏设置对话框</td></tr>
+<tr><td>主窗口图标</td><td><code>MainWindow.ApplyWindowIcon()</code></td><td><code>AppWindow.SetIcon("Assets\icon.ico")</code>，exe 仍内嵌 <code>ApplicationIcon</code></td><td><span class="tag t-ok">通过</span><code>WM_GETICON</code> 返回非零句柄；截图标题栏显示应用图标</td></tr>
+</table>
+<div class="box ok">
+<strong>交付状态：</strong>整解决方案构建 <strong>0 警告 0 错误</strong>，验证套件 <strong>31/31 通过</strong>（新增 T28–T31：默认值、偏好往返、PSK 不落盘、损坏文件回退）。Release 目录与分发 zip 已重新发布：<code>dist/FilesaCOChat-5.1-win-x64/</code> 267 文件 / 89.1 MB，<code>FilesaCOChat-5.1-win-x64.zip</code> 29.3 MB / 267 项，<code>testzip()</code> 无损坏。截图存于 <code>.workbuddy/analysis/ui-refactor-*.png</code>。窄屏（&lt;660 px）会隐藏在线用户列表，此时按用户操作不可用，与改版前一致。
+</div>
+
+<h2 id="s7e">8.4 · 窗口尺寸、独立设置窗口与系统通知（本次迭代）</h2>
+<p>本轮解决三个问题：登录页窗口远大于内容、窄窗口下设置对话框被裁切、以及「通知」被实现成应用内右下角提示条而非系统通知。改动仍集中在展示层，<strong>Core / 协议 / 线格式零改动</strong>。</p>
+<table>
+<tr><th>需求</th><th>实现位置</th><th>关键逻辑</th><th>验证结果</th></tr>
+<tr><td>登录页窗口尺寸匹配内容</td><td><code>MainWindow.ApplyLoginWindowSize()</code> / <code>ApplyChatWindowSize()</code></td><td>登录页宽度固定 420 DIP，高度取 <code>LoginPanel.Measure</code> 的 <code>DesiredSize</code>（含内边距，夹在 420–720 DIP），登录期间 <code>IsResizable=false</code>；<code>LoggedIn</code> 后恢复可缩放并切到 1100×760（按工作区收敛）。尺寸经 <code>GetDpiForWindow</code> 换算，窗口居中到当前显示器工作区</td><td><span class="tag t-ok">通过</span>实机窗口 <strong>436×459</strong>（客户区 420 DIP），logo / 标题 / 用户名 / 登录 / 状态文字完整，上下无大片空白；聊天预览 1100×760 无回归</td></tr>
+<tr><td>设置改为独立窗口，内容完整展示</td><td><code>SettingsWindow.xaml(.cs)</code>；<code>MainWindow.ShowSettingsWindow()</code></td><td><code>ContentDialog</code> 改为顶层 <code>Window</code>：左侧 5 项导航 + 右侧 <code>ScrollViewer</code> 内容面板，默认 880×660 DIP、可缩放、内容超出可滚动；登录页与聊天页共用同一实例，已打开时只激活；关闭主窗口时一并关闭。主题 / 字体即时应用到主窗口，PSK 与通知开关在关闭时提交</td><td><span class="tag t-ok">通过</span>实机窗口 <strong>896×699</strong>，五个分类与各页控件全部可见、无横向裁切；字体页 / 通知页截图排版正常；深色切换即时生效</td></tr>
+<tr><td>「通知」改为系统级通知</td><td><code>SystemNotifier.cs</code>（<code>AppNotificationManager</code>）；<code>MainViewModel.NotificationRequested</code></td><td>启动时 <code>Register()</code>（未打包应用在 HKCU 登记 AUMID + COM 激活器），收到他人消息时用 <code>AppNotificationBuilder</code> 投递 toast 到 <strong>Windows 通知中心</strong>；点击 toast 还原并置前主窗口。删除应用内 <code>NotificationHost</code> / <code>ShowNotification</code> / <code>FadeAsync</code>。设置页显示 <code>AppNotificationManager.Setting</code> 权限状态并提供「发送测试通知」</td><td><span class="tag t-ok">通过</span><code>FILESA_UI_TOAST=1</code> 实拍系统 toast（标题 <code>Filesa COChat</code> + 正文，带应用图标）；通知页显示「Windows 通知权限：已允许」；关闭开关后 <code>settings.json</code> 变为 <code>"NotificationsEnabled": false</code></td></tr>
+<tr><td>标题栏随主题（附带修复）</td><td><code>DwmSetWindowAttribute</code>（20 / 19）</td><td>DWM 标题栏默认按系统而非应用主题绘制，深色界面会出现白色标题条；两个属性号依次尝试，兼容 Win11 与 Win10 1809+</td><td><span class="tag t-ok">通过</span>深色登录页与设置窗口截图标题栏均为深色，文字清晰</td></tr>
+</table>
+<div class="box ok">
+<strong>交付状态：</strong>整解决方案构建 <strong>0 警告 0 错误</strong>，验证套件 <strong>31/31 通过</strong>（本轮为纯展示层改动，未新增 Core 逻辑）。Release 目录与分发 zip 已重新发布：<code>dist/FilesaCOChat-5.1-win-x64/</code> 267 文件 / 89.1 MB，<code>FilesaCOChat-5.1-win-x64.zip</code> 29.3 MB / 267 项，<code>testzip()</code> 无损坏。截图存于 <code>.workbuddy/analysis/ui-v2-*.png</code>（紧凑登录页、独立设置窗口、通知页、系统 toast、深色设置窗口）。
+</div>
+
+<h2 id="s8">9 · 复现命令</h2>
+<pre><code>cd C:\Users\hanan\Desktop\工作台\Filesa\FilesaCOChatWinUI
+
+# 1) 还原 + 整解决方案构建（自包含输出）
+dotnet build FilesaCOChat.sln
+
+# 2) 运行 31 项验证测试（结果写入 test-results.json）
+dotnet run --project tests/FilesaCOChat.Tests/FilesaCOChat.Tests.csproj
+
+# 3) 直接运行（无需安装 Windows App Runtime）
+src\FilesaCOChat.WinUI\bin\Debug\net8.0-windows10.0.19041.0\win-x64\FilesaCOChat.WinUI.exe
+
+# 4) 构建正式 Release 可执行文件（交付用的就是这条）
+dotnet publish src/FilesaCOChat.WinUI/FilesaCOChat.WinUI.csproj -c Release -r win-x64 --self-contained false -o dist/FilesaCOChat-5.1-win-x64
+
+# 5) 其他架构
+dotnet build src/FilesaCOChat.WinUI/FilesaCOChat.WinUI.csproj -r win-arm64</code></pre>
+<p class="small">可执行文件位置：<code>dist/FilesaCOChat-5.1-win-x64/FilesaCOChat.WinUI.exe</code>，<strong>必须与同目录的 266 个依赖文件一起分发</strong>（或直接用 <code>dist/FilesaCOChat-5.1-win-x64.zip</code> 解压后运行）。可选安全档位：在设置对话框填写预共享密钥（<code>AppSettings.PreSharedKey</code>），启用后全房间强制 HMAC-SHA256 并拒绝旧版明文节点。</p>
+
+<h2 id="s9">10 · 局限与后续建议</h2>
+<ul>
+<li><strong>未做真实局域网多机实测 / 抓包</strong>：20 项网络用例在 loopback + 临时端口上跑真实 TCP/UDP socket，但未在多台物理主机、真实交换机广播域中验证 255.255.255.255 广播与 /24 扫描。建议上线前做一次 3 机联调。</li>
+<li><strong>未做运行时抓包比对</strong>：原版 exe 全程未执行（静态逆向），因此「线格式逐字节一致」是与 <code>protocol_reference.py</code> 冻结常量及字节码常量比对的结果，不是与原版进程抓包比对。</li>
+<li><strong>未做长时间压力 / 断线重连 / 弱网测试</strong>：迁移重试、文件传输中断、大文件（接近 2 GiB）边界只做了逻辑与单元覆盖。</li>
+<li><strong>未产出完整反编译 .py 源码</strong>：CPython 3.13 缺成熟反编译器，重写以反汇编 + 常量表为依据，个别 UI 细节（Tk 动画、主题图标排布）属合理重构而非逐行移植。</li>
+<li><strong>单文件 exe 已实测不可行</strong>（详见 §7.3）：WinUI 3 的 WinRT 激活工厂依赖磁盘路径，<code>PublishSingleFile</code> 启动崩溃 <code>0x80040111</code>。若必须单文件，只有 MSIX 打包 / 第三方安装器封装两条路，本次均未采用。</li>
+<li><strong>无代码签名</strong>：与原版一致，未签名 exe 可能触发 SmartScreen 提示。</li>
+</ul>
+
+<footer>
+Filesa COChat 5.1 · WinUI 3 重写交付说明 · 生成时间 2026-11-14 · 全程静态逆向原 exe、未执行目标程序；重写版在本机构建并启动验证。<br>
+配套文档：<code>FilesaCOChat_逆向分析报告.html</code>（缺陷清单来源）、<code>FilesaCOChat_协议参考.md</code>、<code>protocol_reference.py</code>、<code>FilesaCOChatWinUI/README.md</code>、<code>test-results.json</code>。
+</footer>
+</div>
+</body>
+</html>

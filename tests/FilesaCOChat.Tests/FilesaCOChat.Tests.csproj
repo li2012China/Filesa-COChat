@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>FilesaCOChat.Tests</RootNamespace>
+    <AssemblyName>FilesaCOChat.Tests</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\FilesaCOChat.Core\FilesaCOChat.Core.csproj" />
+    <!-- ChatLine / ChatTimeline are pure C# (no WinUI types), so the exact
+         source used by the UI can also be exercised head-less here. -->
+    <Compile Include="..\..\src\FilesaCOChat.WinUI\ViewModels\ChatLine.cs" Link="Linked\ChatLine.cs" />
+    <Compile Include="..\..\src\FilesaCOChat.WinUI\ViewModels\ChatTimeline.cs" Link="Linked\ChatTimeline.cs" />
+  </ItemGroup>
+</Project>

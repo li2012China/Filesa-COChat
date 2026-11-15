@@ -1,0 +1,312 @@
+<Window
+    x:Class="FilesaCOChat.WinUI.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:FilesaCOChat.WinUI"
+    Title="Filesa COChat 7.0 · WinUI 3">
+
+    <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+          SizeChanged="RootGrid_SizeChanged">
+        <Grid.Resources>
+            <local:KindToBrushConverter x:Key="KindBrush" />
+            <local:TimestampConverter x:Key="TimeFmt" />
+            <local:BoolToVisibilityConverter x:Key="BoolVisibility" />
+
+            <!-- Bubble palette. Colors are refreshed on ActualThemeChanged in code-behind;
+                 using static resources keeps every template on one shared brush. -->
+            <SolidColorBrush x:Key="MineBubbleBrush" Color="#FFD6E8F8" />
+            <SolidColorBrush x:Key="MineBubbleBorderBrush" Color="#FFB9D6EE" />
+            <SolidColorBrush x:Key="OtherBubbleBrush" Color="#FFECEEF2" />
+            <SolidColorBrush x:Key="OtherBubbleBorderBrush" Color="#FFD3D8DE" />
+
+            <!-- ================= Incoming: left aligned bubble ================= -->
+            <DataTemplate x:Key="IncomingBubble">
+                <!-- The 0.72* column scales with the message pane; MaxWidth caps it
+                     on very wide screens. Short text shrinks to its content. -->
+                <Grid Margin="0,5" HorizontalAlignment="Stretch"
+                      Loaded="ChatLineRoot_Loaded" DataContextChanged="ChatLineRoot_DataContextChanged">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.72*" />
+                        <ColumnDefinition Width="0.28*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" HorizontalAlignment="Left" MaxWidth="520"
+                                Spacing="4">
+                        <StackPanel Orientation="Horizontal" Spacing="8"
+                                    ToolTipService.ToolTip="{Binding Timestamp, Converter={StaticResource TimeFmt}, ConverterParameter=Full}">
+                            <TextBlock Text="{Binding Sender}" FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="{Binding Timestamp, Converter={StaticResource TimeFmt}}"
+                                       FontSize="11"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <Border Background="{StaticResource OtherBubbleBrush}"
+                                BorderBrush="{StaticResource OtherBubbleBorderBrush}"
+                                BorderThickness="1" CornerRadius="14,14,14,4"
+                                Padding="12,8" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding Text}" TextWrapping="Wrap"
+                                       IsTextSelectionEnabled="True"
+                                       ToolTipService.ToolTip="{Binding Timestamp, Converter={StaticResource TimeFmt}, ConverterParameter=Full}" />
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
+
+            <!-- ================= Outgoing: right aligned bubble ================= -->
+            <DataTemplate x:Key="OutgoingBubble">
+                <Grid Margin="0,5" HorizontalAlignment="Stretch"
+                      Loaded="ChatLineRoot_Loaded" DataContextChanged="ChatLineRoot_DataContextChanged">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.28*" />
+                        <ColumnDefinition Width="0.72*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Right" MaxWidth="520"
+                                Spacing="4">
+                        <StackPanel Orientation="Horizontal" Spacing="8"
+                                    HorizontalAlignment="Right"
+                                    ToolTipService.ToolTip="{Binding Timestamp, Converter={StaticResource TimeFmt}, ConverterParameter=Full}">
+                            <TextBlock Text="{Binding Timestamp, Converter={StaticResource TimeFmt}}"
+                                       FontSize="11"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="{Binding Sender}" FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <Border Background="{StaticResource MineBubbleBrush}"
+                                BorderBrush="{StaticResource MineBubbleBorderBrush}"
+                                BorderThickness="1" CornerRadius="14,14,4,14"
+                                Padding="12,8" HorizontalAlignment="Right">
+                            <TextBlock Text="{Binding Text}" TextWrapping="Wrap"
+                                       IsTextSelectionEnabled="True"
+                                       ToolTipService.ToolTip="{Binding Timestamp, Converter={StaticResource TimeFmt}, ConverterParameter=Full}" />
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
+
+            <!-- ================= System: centred, no bubble ================= -->
+            <DataTemplate x:Key="SystemLine">
+                <StackPanel Margin="0,7" HorizontalAlignment="Stretch" MaxWidth="620"
+                            Spacing="2"
+                            Loaded="ChatLineRoot_Loaded" DataContextChanged="ChatLineRoot_DataContextChanged">
+                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap"
+                               TextAlignment="Center" FontSize="12"
+                               IsTextSelectionEnabled="True"
+                               Foreground="{Binding Kind, Converter={StaticResource KindBrush}}"
+                               ToolTipService.ToolTip="{Binding Timestamp, Converter={StaticResource TimeFmt}, ConverterParameter=Full}" />
+                    <!-- Only the last line of a consecutive system-message group
+                         renders the group time (ChatTimeline.ShowTimestamp). -->
+                    <TextBlock Text="{Binding Timestamp, Converter={StaticResource TimeFmt}}"
+                               Visibility="{Binding ShowTimestamp, Converter={StaticResource BoolVisibility}}"
+                               FontSize="10" HorizontalAlignment="Center"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               ToolTipService.ToolTip="{Binding Timestamp, Converter={StaticResource TimeFmt}, ConverterParameter=Full}" />
+                </StackPanel>
+            </DataTemplate>
+
+            <local:ChatTemplateSelector x:Key="BubbleSelector"
+                                        OtherTemplate="{StaticResource IncomingBubble}"
+                                        MineTemplate="{StaticResource OutgoingBubble}"
+                                        SystemTemplate="{StaticResource SystemLine}" />
+        </Grid.Resources>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ================= Login (login / handle_search_result) ================= -->
+        <!-- Compact card: the window itself is resized to this content while the
+             user is logged out (see ApplyLoginWindowSize), so the page must not
+             rely on extra room. Padding lives here so the measured size includes
+             it and the gear never sits flush against the frame. -->
+        <Grid x:Name="LoginPanel" Grid.RowSpan="3" Visibility="Visible"
+              MaxWidth="460" Padding="24,12,24,20"
+              VerticalAlignment="Center" HorizontalAlignment="Center">
+            <!-- Settings entry on the login page too, so font/theme can be tuned
+                 before joining a room. Same dialog as the chat toolbar. -->
+            <Button x:Name="LoginSettingsButton" HorizontalAlignment="Right"
+                    VerticalAlignment="Top" Click="Settings_Click"
+                    ToolTipService.ToolTip="设置"
+                    AutomationProperties.Name="设置">
+                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="16"
+                          Glyph="&#xE713;" />
+            </Button>
+            <StackPanel Spacing="10">
+                <Image x:Name="LogoImage" Width="180" Height="120" Stretch="Uniform"
+                       HorizontalAlignment="Center" />
+                <TextBlock Text="Filesa COChat" FontSize="30" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="局域网多人聊天 · 无需专用服务器" FontSize="13"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="用户名:" Margin="0,14,0,0" />
+                <TextBox x:Name="UsernameBox" PlaceholderText="请输入用户名"
+                         KeyDown="UsernameBox_KeyDown" />
+                <Button x:Name="LoginButton" Content="登录" HorizontalAlignment="Stretch"
+                        Style="{ThemeResource AccentButtonStyle}" Click="Login_Click" />
+                <ProgressBar x:Name="SearchProgress" IsIndeterminate="True" Visibility="Collapsed" />
+                <TextBlock x:Name="LoginStatus" Text="准备开始搜索..." FontSize="12"
+                           TextWrapping="Wrap"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+        </Grid>
+
+        <!-- ================= Chat (main window) ================= -->
+        <Grid x:Name="ChatPanel" Grid.RowSpan="3" Visibility="Collapsed" Padding="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="UsersColumn" Width="220" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Three rows so the room / notice text can never squeeze the buttons
+                 on small windows; long text is trimmed instead of overflowing. -->
+            <Grid Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="SettingsButton" Content="设置" Click="Settings_Click" />
+                </StackPanel>
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,6,0,0">
+                    <TextBlock x:Name="RoomLabel" Text="Filesa COChat 7.0"
+                               VerticalAlignment="Center" FontWeight="SemiBold"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock x:Name="StatusLabel" VerticalAlignment="Center" FontSize="12"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+                <!-- Update notice only. Routine status text stays in StatusLabel above;
+                     this bar must stay closed unless a newer release was actually
+                     found (MainViewModel raises UpdateNoticed only then). -->
+                <InfoBar x:Name="NoticeBar" Grid.Row="2" Margin="0,8,0,0"
+                         IsOpen="False" IsClosable="True"
+                         Severity="Success"
+                         CloseButtonClick="NoticeBar_CloseButtonClick" />
+            </Grid>
+
+            <Border x:Name="MessageBorder" Grid.Row="1" Grid.Column="0" BorderThickness="1"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    CornerRadius="6" Margin="0,0,10,0">
+                <ListView x:Name="MessageList" SelectionMode="Single" Padding="12,8"
+                          ItemTemplateSelector="{StaticResource BubbleSelector}"
+                          Loaded="MessageList_Loaded"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <!-- The stock ListView item transitions (AddDelete / Entrance /
+                         Reposition) are attached to EVERY realised container, so
+                         appending one message re-animated the whole chat. Turn
+                         them off globally; MainWindow.xaml.cs animates only the
+                         single container of the newly appended bubble. -->
+                    <ListView.ItemContainerTransitions>
+                        <TransitionCollection />
+                    </ListView.ItemContainerTransitions>
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsStackPanel Orientation="Vertical">
+                                <ItemsStackPanel.ChildrenTransitions>
+                                    <TransitionCollection />
+                                </ItemsStackPanel.ChildrenTransitions>
+                            </ItemsStackPanel>
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                    <ListView.Resources>
+                        <SolidColorBrush x:Key="ListViewItemBackgroundPointerOver" Color="#08000000" />
+                        <SolidColorBrush x:Key="ListViewItemBackgroundPressed" Color="#10000000" />
+                        <SolidColorBrush x:Key="ListViewItemBackgroundSelected" Color="#10000000" />
+                        <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPointerOver" Color="#18000000" />
+                        <SolidColorBrush x:Key="ListViewItemBackgroundSelectedUnfocused" Color="#10000000" />
+                    </ListView.Resources>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0" />
+                            <Setter Property="MinHeight" Value="0" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem Text="复制所选消息" Click="CopyMessage_Click" />
+                            <MenuFlyoutItem Text="清空聊天记录" Click="ClearMessages_Click" />
+                        </MenuFlyout>
+                    </ListView.ContextFlyout>
+                </ListView>
+            </Border>
+
+            <Border x:Name="UsersPanel" Grid.Row="1" Grid.Column="1" BorderThickness="1"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    CornerRadius="6" Padding="8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="在线用户" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <ListView x:Name="UserList" Grid.Row="1" SelectionMode="Single"
+                              RightTapped="UserList_RightTapped">
+                        <ListView.ContextFlyout>
+                            <!-- Per-user actions live on the item (right-click) instead
+                                 of crowding the toolbar. Opening re-checks the target so
+                                 empty / self entries can never be acted on. -->
+                            <MenuFlyout x:Name="UserMenu" Opening="UserMenu_Opening">
+                                <MenuFlyoutItem x:Name="UserCommandItem" Text="命令行"
+                                                Click="UserCommand_Click">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE756;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Name="UserSendFileItem" Text="发送文件"
+                                                Click="UserSendFile_Click">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE8E5;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </ListView.ContextFlyout>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" Margin="2,3" TextTrimming="CharacterEllipsis" />
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Border>
+
+            <TextBlock x:Name="UserCountLabel" Grid.Row="2" Grid.ColumnSpan="2" Text="用户: 0"
+                       FontSize="12" Margin="0,8,0,4"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <Grid Grid.Row="3" Grid.ColumnSpan="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="InputBox" PlaceholderText="输入消息，回车发送"
+                         KeyDown="InputBox_KeyDown" />
+                <!-- Icon-only send button (Segoe Fluent "Send" glyph E724); the
+                     label is preserved for tooltip and screen readers. -->
+                <Button x:Name="SendButton" Grid.Column="1" Margin="8,0,0,0"
+                        MinWidth="44" Height="32" Padding="10,0"
+                        Style="{ThemeResource AccentButtonStyle}"
+                        ToolTipService.ToolTip="发送"
+                        AutomationProperties.Name="发送"
+                        Click="Send_Click">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                              FontSize="16" Glyph="&#xE724;" />
+                </Button>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

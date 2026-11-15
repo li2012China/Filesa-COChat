@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FilesaCOChat.exe 逆向分析报告 · 代码开发视角</title>
+<style>
+:root{--bg:#0b0f14;--panel:#131b24;--panel2:#17212c;--line:#26364a;--fg:#e6edf3;--dim:#9aa9b8;--blue:#58a6ff;--green:#3fb950;--orange:#e3a341;--red:#f85149;--purple:#bc8cff;--cyan:#39c5cf}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.7 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px 80px}
+header{background:linear-gradient(135deg,#122236 0%,#0b0f14 70%);border-bottom:1px solid var(--line);padding:46px 0 34px;margin-bottom:28px}
+header .wrap{padding-bottom:0}
+h1{font-size:30px;margin:0 0 10px;letter-spacing:.3px}
+.sub{color:var(--dim);font-size:15px;margin:0}
+.badges{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px}
+.badge{background:#1b2a3a;border:1px solid #2c4a68;color:#b9d8ff;border-radius:20px;padding:3px 12px;font-size:12px}
+.badge.warn{background:#332616;border-color:#6b4c1c;color:#ffd79a}
+.badge.ok{background:#16301f;border-color:#2c5a38;color:#a8e6b8}
+nav{position:sticky;top:0;z-index:5;background:rgba(11,15,20,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 0;margin-bottom:26px}
+nav .wrap{display:flex;gap:16px;flex-wrap:wrap;padding-top:0;padding-bottom:0}
+nav a{color:var(--dim);text-decoration:none;font-size:13px}
+nav a:hover{color:var(--blue)}
+h2{font-size:21px;margin:38px 0 14px;padding-left:11px;border-left:3px solid var(--blue)}
+h3{font-size:16px;margin:24px 0 10px;color:#c9d8e8}
+p{margin:9px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:16px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.card .k{font-size:12px;color:var(--dim);letter-spacing:.5px}
+.card .v{font-size:24px;font-weight:650;margin-top:4px;color:var(--blue)}
+.card .n{font-size:12px;color:var(--dim);margin-top:4px}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:#1a2836;color:#cfe0f2;font-weight:600}
+tr:nth-child(even) td{background:#101821}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:#1b2734;border:1px solid #2b3b4d;border-radius:4px;padding:1px 5px;color:#a9d4ff;font-size:12.5px}
+pre{background:#0e151d;border:1px solid var(--line);border-radius:9px;padding:14px 16px;overflow-x:auto;font:12.5px/1.65 Consolas,monospace;color:#cfe3f5}
+pre code{background:none;border:none;padding:0;color:inherit}
+.mono{font-family:Consolas,monospace;font-size:12.5px}
+.tag{display:inline-block;border-radius:4px;padding:1px 7px;font-size:11.5px;font-weight:600}
+.t-obs{background:#153a24;color:#8de3a6;border:1px solid #2c6b41}
+.t-inf{background:#3a2b12;color:#ffd28a;border:1px solid #74531f}
+.t-unk{background:#2a2438;color:#cbb2ff;border:1px solid #50406f}
+.t-risk{background:#421c1e;color:#ffb2b5;border:1px solid #7a3136}
+.box{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:8px;padding:14px 18px;margin:14px 0}
+.box.warn{border-left-color:var(--orange);background:#211a10}
+.box.risk{border-left-color:var(--red);background:#211315}
+.box.ok{border-left-color:var(--green);background:#102017}
+ul,ol{margin:10px 0;padding-left:22px}
+li{margin:5px 0}
+.small{font-size:12.5px;color:var(--dim)}
+.hl{color:var(--orange);font-weight:600}
+.svgwrap{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin:16px 0;overflow-x:auto}
+.svgwrap svg{display:block;min-width:760px;width:100%;height:auto}
+footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);font-size:12.5px}
+.ev{font-family:Consolas,monospace;font-size:11.5px;color:#7fa8c9;word-break:break-all}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>FilesaCOChat.exe 逆向分析报告</h1>
+<p class="sub">面向代码开发 · 静态取证（未执行目标程序） · 分析时间 2026-11-14</p>
+<div class="badges">
+<span class="badge">PE32+ / x86-64</span><span class="badge">PyInstaller 2.1</span><span class="badge">Python 3.13</span>
+<span class="badge">Tkinter GUI</span><span class="badge">单文件应用 main.py</span><span class="badge">版本 5.1</span>
+<span class="badge ok">CArchive 未加密</span><span class="badge ok">1455 项哈希全部校验通过</span>
+<span class="badge warn">发现远程命令执行面</span><span class="badge warn">无 Authenticode 签名</span>
+</div>
+</div></header>
+
+<nav><div class="wrap">
+<a href="#s0">结论速览</a><a href="#s1">打包结构</a><a href="#s2">应用架构</a><a href="#s3">网络协议</a>
+<a href="#s4">代码结构</a><a href="#s5">依赖与资源</a><a href="#s6">开发风险</a><a href="#s7">重建路线</a><a href="#s8">证据与局限</a>
+</div></nav>
+
+<div class="wrap">
+
+<h2 id="s0">1 · 结论速览</h2>
+<div class="grid">
+<div class="card"><div class="k">文件大小</div><div class="v">23.47 MB</div><div class="n">23,465,080 字节</div></div>
+<div class="card"><div class="k">SHA-256</div><div class="v mono" style="font-size:12px">60bd7e21…c07a80d0</div><div class="n">全文摘要，见证据表</div></div>
+<div class="card"><div class="k">CArchive 条目</div><div class="v">1,031</div><div class="n">5 模块 / 7 脚本 / 1017 二进制 / 1 PYZ</div></div>
+<div class="card"><div class="k">PYZ 纯 Python 模块</div><div class="v">425</div><div class="n">全部为标准库 / 第三方库</div></div>
+<div class="card"><div class="k">应用代码</div><div class="v">1 个文件</div><div class="n">main.py · 98,665 B marshal 数据</div></div>
+<div class="card"><div class="k">代码对象 / 常量</div><div class="v">81 / 402</div><div class="n">321 个唯一字符串常量</div></div>
+</div>
+<p><strong>一句话结论：</strong>这是一个由 <span class="hl">PyInstaller 打包的单文件 Python 3.13 桌面应用</span>，整个业务逻辑压缩在唯一脚本 <code>main.py</code> 中；它是 MIT 开源项目 <strong>Filesa COChat</strong> 的 <strong>5.1</strong> 版，一个「无需专用服务器」的局域网聊天工具，使用 Tkinter 做界面、原生 <code>socket</code> 做明文 TCP/UDP 通信、Pillow 处理图标、<code>requests</code> 检查 GitHub 更新，并在 5.1 中新增了带 SHA-256 校验的文件传输与服务器自动迁移。</p>
+<div class="box risk"><strong>对开发者最重要的三个发现</strong>
+<ol style="margin-bottom:0">
+<li><span class="tag t-risk">高危</span> 聊天协议中定义了 <code>COMMAND:&lt;目标用户&gt;:&lt;命令&gt;</code>，命中本机用户名的客户端会执行 <code>subprocess.run(command, shell=True, timeout=5)</code>。协议无认证、无加密，任何能连上 11451/TCP 的局域网主机都可伪造目标用户名触发执行。</li>
+<li><span class="tag t-risk">功能缺陷</span> 静态字节码中，<code>receive_messages</code> 收到普通聊天报文 <code>user:msg</code> 后只调用本地 <code>add_message</code>，<strong>没有转发给其他客户端</strong>；客户端又只与服务器保持一条 TCP 连接。据此推断：服务器发出的消息能广播到所有客户端，但客户端发出的消息只在服务器窗口显示，客户端之间互不可见（<span class="tag t-inf">推断</span>，建议运行时复核）。</li>
+<li><span class="tag t-inf">工程问题</span> 所有报文都是「冒号分隔的裸字符串 + 单次 <code>recv(1024)</code>」，没有长度帧、转义与消息边界，存在粘包/半包与协议注入；控制指令与聊天文本共用同一命名空间。</li>
+</ol></div>
+
+<h2 id="s1">2 · 二进制与打包结构</h2>
+<h3>2.1 PE 层（bootloader，仅原生前缀）</h3>
+<table>
+<tr><th>项目</th><th>观测值</th><th>说明</th></tr>
+<tr><td>格式 / 架构</td><td class="mono">PE32+ · 0x8664 (AMD64)</td><td>7 个节：.text/.rdata/.data/.pdata/.fptable/.rsrc/.reloc</td></tr>
+<tr><td>时间戳</td><td class="mono">1768385232</td><td>PE 头声明值，未做时间语义解释</td></tr>
+<tr><td>节区末端 / overlay</td><td class="mono">0x4CA00 / 23,151,224 B</td><td>overlay 即整个 PyInstaller CArchive</td></tr>
+<tr><td>导入表</td><td>5 DLL / 146 函数</td><td>USER32、COMCTL32、KERNEL32、ADVAPI32、GDI32；含 <code>CreateWindowExW</code>、<code>DialogBoxIndirectParamW</code> 等 GUI API，是 bootloader 的窗口/错误对话框能力，<strong>不是应用代码</strong></td></tr>
+<tr><td>imphash (pefile)</td><td class="mono">dcaf48c1f10b0efa0a4472200f3850ed</td><td>标准导入表哈希，可用于同批样本比对</td></tr>
+<tr><td>资源</td><td>3 项</td><td>RT_ICON(35608 B)、RT_GROUP_ICON(110×78/32bit)、RT_MANIFEST(1293 B)</td></tr>
+<tr><td>Authenticode</td><td><span class="tag t-obs">缺失</span></td><td>无 IMAGE_DIRECTORY_ENTRY_SECURITY；仅表示此证书目录不存在</td></tr>
+</table>
+<p class="small">本节为 <span class="tag t-obs">观察</span>，来自 PE 导入表 / 资源表 / 证书表解析器；结论限于静态声明，不代表运行时调用。</p>
+
+<h3>2.2 PyInstaller CArchive 层（应用层）</h3>
+<table>
+<tr><th>字段</th><th>值</th></tr>
+<tr><td>格式 / 布局</td><td class="mono">pyinstaller / layout_version 2.1</td></tr>
+<tr><td>archive_start / archive_size</td><td class="mono">313,856 (0x4CA00) / 23,151,224</td></tr>
+<tr><td>cookie / TOC</td><td class="mono">0x1660C20 · TOC 偏移 23,093,504 · TOC 57,632 B</td></tr>
+<tr><td>Python 版本 / 运行库</td><td class="mono">313 → CPython 3.13 · python313.dll</td></tr>
+<tr><td>加密标记</td><td><span class="tag t-obs">不存在</span>（PYZ 可直接解压 marshal 数据）</td></tr>
+<tr><td>完整性</td><td><span class="tag t-obs">1455 节点 verified / 0 mismatched</span>，artifact graph 无矛盾</td></tr>
+<tr><td>运行时选项</td><td><code>pyi-contents-directory _internal</code>（onefile 解压目录名）</td></tr>
+</table>
+
+<div class="svgwrap">
+<svg viewBox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+<rect x="0" y="0" width="1000" height="300" fill="#131b24"/>
+<text x="20" y="28" fill="#e6edf3" font-size="15" font-weight="600">FilesaCOChat.exe 分层结构（静态观测）</text>
+<rect x="20" y="48" width="960" height="46" rx="6" fill="#1b2a3a" stroke="#2c4a68"/>
+<text x="34" y="68" fill="#b9d8ff" font-size="13">PE32+ Bootloader</text><text x="34" y="86" fill="#9aa9b8" font-size="11">MZ/PE 头 · 7 节 · 146 导入 · 图标/清单资源 · 0x4CA00 之前</text>
+<rect x="20" y="104" width="960" height="46" rx="6" fill="#1a2d24" stroke="#2c5a38"/>
+<text x="34" y="124" fill="#a8e6b8" font-size="13">CArchive（PyInstaller 2.1，未加密）</text><text x="34" y="142" fill="#9aa9b8" font-size="11">1031 条目 · 5 模块(m) / 7 脚本(s) / 1017 二进制(b) / 1 PYZ(z) / 1 选项(o)</text>
+<rect x="20" y="160" width="300" height="112" rx="6" fill="#202b3a" stroke="#3a5573"/>
+<text x="34" y="182" fill="#e6edf3" font-size="13" font-weight="600">入口脚本（7 个 s）</text>
+<text x="34" y="202" fill="#9aa9b8" font-size="11.5">main  ← 唯一业务脚本 98,665 B</text>
+<text x="34" y="220" fill="#9aa9b8" font-size="11.5">pyiboot01_bootstrap</text>
+<text x="34" y="238" fill="#9aa9b8" font-size="11.5">pyi_rth_inspect / pkgutil /</text>
+<text x="34" y="256" fill="#9aa9b8" font-size="11.5">multiprocessing / crypto / tkinter</text>
+<rect x="336" y="160" width="310" height="112" rx="6" fill="#202b3a" stroke="#3a5573"/>
+<text x="350" y="182" fill="#e6edf3" font-size="13" font-weight="600">PYZ.pyz（3,556,721 B）</text>
+<text x="350" y="202" fill="#9aa9b8" font-size="11.5">425 个纯 Python 模块</text>
+<text x="350" y="220" fill="#9aa9b8" font-size="11.5">PIL 76 · cryptography 49 · urllib3 36</text>
+<text x="350" y="238" fill="#9aa9b8" font-size="11.5">asyncio 32 · requests 17 · tkinter 10</text>
+<text x="350" y="256" fill="#9aa9b8" font-size="11.5">其余为 CPython 标准库</text>
+<rect x="662" y="160" width="318" height="112" rx="6" fill="#202b3a" stroke="#3a5573"/>
+<text x="676" y="182" fill="#e6edf3" font-size="13" font-weight="600">二进制 / 数据（1017 个 b）</text>
+<text x="676" y="202" fill="#9aa9b8" font-size="11.5">27 pyd · 48 dll · base_library.zip</text>
+<text x="676" y="220" fill="#9aa9b8" font-size="11.5">_tcl_data / _tk_data（Tk 运行时）</text>
+<text x="676" y="238" fill="#9aa9b8" font-size="11.5">image/*.png、image/icon.ico</text>
+<text x="676" y="256" fill="#9aa9b8" font-size="11.5">certifi/cacert.pem、dist-info</text>
+</svg>
+</div>
+<p class="small">应用层入口 <code>main</code> 的字节码 magic 为 <code>f30d0d0a</code>（CPython 3.13），与本机 Python 3.13 一致，因此可直接 <code>marshal.loads</code> 得到完整代码对象树：81 个 code object、3442 个 marshal 对象、最大嵌套深度 11。<span class="tag t-obs">观察</span></p>
+
+<h2 id="s2">3 · 应用架构</h2>
+<h3>3.1 类与职责</h3>
+<table>
+<tr><th>类 / 行号</th><th>职责</th><th>关键成员</th></tr>
+<tr><td><code>PopupNotification</code><br>main.py:17–294</td><td>自定义 Tk <code>Toplevel</code> 消息弹窗：主题图标加载、淡入淡出与位移动画、堆叠重排、点击回调、5 条上限</td><td><code>load_theme_icons</code>、<code>show_animation</code>、<code>hide_animation</code>、<code>refresh_popup_positions</code>、<code>show_message</code>；320×80 窗口、<code>-alpha</code>/<code>-topmost</code>、默认主题 <code>Light</code></td></tr>
+<tr><td><code>FilesaCOChat</code><br>main.py:296–2020</td><td>主应用：登录 → 搜索/创建聊天室 → 消息收发 → 文件传输 → 设置/更新 → 服务器迁移</td><td><code>__init__</code> 初始化 47 个实例属性，<code>start()</code> 进入 <code>mainloop</code></td></tr>
+</table>
+
+<h3>3.2 状态与并发模型</h3>
+<div class="two">
+<div class="box"><strong>核心状态（__init__:297）</strong><br>
+<code>port=11451</code>、<code>file_transfer_port=11450</code>、<code>file_receive_dir="files"</code>、<code>version="5.1"</code>、<code>host</code>（本机 IP）、<code>username</code>、<code>is_server</code>、<code>running</code>、<code>migrating</code>、<code>new_server_ip</code>、<code>users</code>（socket→用户名）、<code>user_ips</code>（用户名→IP）、<code>user_list</code>、<code>client_sockets</code>、<code>message_queue</code>、<code>notifications_enabled</code>、<code>chat_font</code>。
+</div>
+<div class="box"><strong>线程 / 同步</strong><br>
+发现服务、连接接受、每条连接一个 <code>receive_messages</code>、文件传输服务、50 线程端口扫描、搜索线程、更新检查线程；<code>user_list_lock</code> / <code>client_sockets_lock</code> / 扫描 <code>threading.Lock</code>；工作线程通过 <code>message_queue</code> + <code>root.after(100, process_queue)</code> 把结果交回 Tk 主线程（这是正确做法）。<span class="tag t-inf">部分回调是否跨线程直接操作 Tk 需运行时确认</span>
+</div>
+</div>
+
+<h3>3.3 启动与发现流程</h3>
+<div class="svgwrap">
+<svg viewBox="0 0 1000 250" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+<rect x="0" y="0" width="1000" height="250" fill="#131b24"/>
+<defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#58a6ff"/></marker></defs>
+<g font-size="12" fill="#e6edf3">
+<rect x="18" y="60" width="150" height="58" rx="7" fill="#1b2a3a" stroke="#3a5573"/><text x="30" y="82">__main__ → FilesaCOChat()</text><text x="30" y="102" fill="#9aa9b8" font-size="11">构建 Tk 登录界面</text>
+<rect x="196" y="60" width="150" height="58" rx="7" fill="#1b2a3a" stroke="#3a5573"/><text x="208" y="82">login(event)</text><text x="208" y="102" fill="#9aa9b8" font-size="11">用户名非空校验</text>
+<rect x="374" y="60" width="170" height="58" rx="7" fill="#1b2a3a" stroke="#3a5573"/><text x="386" y="82">find_existing_chatroom</text><text x="386" y="102" fill="#9aa9b8" font-size="11">UDP 广播 → /24 扫描</text>
+<rect x="572" y="20" width="180" height="58" rx="7" fill="#1a2d24" stroke="#2c5a38"/><text x="584" y="42">join_chatroom(ip)</text><text x="584" y="62" fill="#9aa9b8" font-size="11">TCP 11451 + JOIN:</text>
+<rect x="572" y="108" width="180" height="58" rx="7" fill="#2a2218" stroke="#6b4c1c"/><text x="584" y="130">create_chatroom()</text><text x="584" y="150" fill="#9aa9b8" font-size="11">listen + discovery_service</text>
+<rect x="780" y="60" width="200" height="58" rx="7" fill="#202b3a" stroke="#3a5573"/><text x="792" y="82">start() / mainloop</text><text x="792" y="102" fill="#9aa9b8" font-size="11">5s 后自动检查更新</text>
+</g>
+<g stroke="#58a6ff" stroke-width="1.6" fill="none" marker-end="url(#ar)">
+<path d="M168,89 L192,89"/><path d="M346,89 L370,89"/><path d="M544,89 L568,60"/><path d="M544,89 L568,137"/>
+<path d="M752,49 L776,89"/><path d="M752,137 L776,89"/>
+</g>
+<text x="20" y="205" fill="#9aa9b8" font-size="11.5">发现策略：先向 255.255.255.255:11452 发 COCHAT_DISCOVERY:11451，等 3 秒；无响应则扫描本机 /24 网段的 TCP 11451（50 线程、0.1s 超时）。结果经 message_queue 交回主线程 handle_search_result。</text>
+</svg>
+</div>
+
+<h2 id="s3">4 · 网络协议规范（静态还原）</h2>
+<p class="small">全部为 UTF-8 明文字符串，<strong>无魔数、无长度帧、无认证、无加密</strong>；接收侧统一 <code>recv(1024)</code>（文件数据除外，用 4096）。下表为 <span class="tag t-obs">字节码中直接观测到的常量与拼接</span>，报文语义为 <span class="tag t-inf">静态推断</span>。</p>
+<table>
+<tr><th>通道</th><th>端口</th><th>方向</th><th>报文 / 行为</th></tr>
+<tr><td>UDP 发现</td><td class="mono">11452</td><td>C → 广播</td><td><code>COCHAT_DISCOVERY:11451</code> → <code>255.255.255.255:11452</code>；socket <code>SO_BROADCAST</code>、timeout 2s、循环窗口 3s</td></tr>
+<tr><td>UDP 发现</td><td class="mono">11452</td><td>S → C</td><td>服务器绑定 <code>0.0.0.0:11452</code>，收到 <code>COCHAT_DISCOVERY:</code> 前缀即回 <code>COCHAT_RESPONSE:11451</code>；客户端按字符串全等比较，取 <code>addr[0]</code> 作为服务器 IP</td></tr>
+<tr><td>TCP 聊天</td><td class="mono">11451</td><td>C → S</td><td><code>JOIN:&lt;username&gt;</code>；随后 <code>USERLIST_REQUEST</code></td></tr>
+<tr><td>TCP 聊天</td><td class="mono">11451</td><td>S → C</td><td>重名则 <code>USERNAME_EXISTS</code>；否则 <code>USERLIST:&lt;a,b,c&gt;</code>（逗号分隔，广播或单发）；加入时系统消息 <code>&lt;user&gt; 加入了聊天室</code></td></tr>
+<tr><td>TCP 聊天</td><td class="mono">11451</td><td>双向</td><td>普通消息 <code>&lt;username&gt;:&lt;text&gt;</code>，按 <code>split(':', 1)</code> 解析后 <code>add_message</code> 本地显示</td></tr>
+<tr><td>TCP 控制</td><td class="mono">11451</td><td>S → C</td><td><code>MIGRATE:&lt;new_server_ip&gt;</code>（其余客户端迁移）、<code>PROMOTE:&lt;old_server_ip&gt;</code>（指定新服务器）</td></tr>
+<tr><td>TCP 控制</td><td class="mono">11451</td><td>C → C</td><td><code>COMMAND:&lt;target_user&gt;:&lt;shell command&gt;</code>，目标匹配本机用户名时执行 <code>subprocess.run(..., shell=True, timeout=5)</code></td></tr>
+<tr><td>TCP 文件</td><td class="mono">11450</td><td>握手</td><td><code>&lt;filename&gt;|&lt;file_size&gt;</code> → 接收端弹窗确认 → 回 <code>b'ACCEPT'</code> / <code>b'REJECT'</code></td></tr>
+<tr><td>TCP 文件</td><td class="mono">11450</td><td>数据</td><td>ACCEPT 后 4096 字节分块直到达到 <code>file_size</code>；接收端写 <code>files/&lt;name&gt;</code>，重名递增 <code>name_1.ext</code></td></tr>
+<tr><td>TCP 文件</td><td class="mono">11450</td><td>校验</td><td>接收端发 <code>b'SEND_HASH'</code> → 发送端回 SHA-256 hexdigest → 本地 <code>hashlib.sha256</code> 比对，✓ / ✗ 提示</td></tr>
+<tr><td>HTTPS</td><td class="mono">443</td><td>出网</td><td><code>GET https://api.github.com/repos/li2012China/Filesa-COChat/releases/latest</code>（timeout 5），取 <code>tag_name</code> 去掉 <code>v</code> 与 <code>5.1</code> 比较；仅提示/打开网页，不自动下载安装</td></tr>
+</table>
+
+<h3>4.1 服务器迁移时序</h3>
+<pre><code>服务器关闭 (WM_DELETE_WINDOW → on_closing → initiate_migration)
+  ├─ select_new_server()  从 user_list 中随机挑一个 ≠ 自己的用户
+  ├─ 向该用户的 socket 单发  PROMOTE:&lt;self.host&gt;
+  │     └─ handle_promotion(): disconnect_all() → create_chatroom() → 成为新服务器
+  ├─ 向其余所有 socket 广播 MIGRATE:&lt;new_server_ip&gt;
+  │     └─ handle_migration(): migrating=True → disconnect_all()
+  │            → join_chatroom(new_ip)；失败则 5s 后 reconnect_to_server()
+  └─ time.sleep(1) 后释放旧连接（无确认握手、无版本号/任期）</code></pre>
+<p class="small"><span class="tag t-inf">推断</span> 迁移依赖「先提升新服务器、再通知其余人」的时序与固定 1 秒延迟，缺少确认/重试仲裁，网络抖动下可能出现双服务器或无服务器；建议运行时压测验证。</p>
+
+<h3>4.2 与上游文档的差异</h3>
+<table>
+<tr><th>项目</th><th>仓库 README（main 分支）</th><th>本次二进制 5.1</th></tr>
+<tr><td>端口</td><td>11451 聊天 / 11452 发现</td><td>一致；<strong>另有 11450 文件传输</strong>（README 未记录）</td></tr>
+<tr><td>功能</td><td>「扩展可能性」中把文件传输列为待办</td><td>已实现完整文件传输与 SHA-256 校验</td></tr>
+<tr><td>源码</td><td>main 分支只有网页、LICENSE、assets，<strong>无 .py 文件</strong></td><td>唯一的应用逻辑载体就是本 exe 内的 <code>main.pyc</code></td></tr>
+<tr><td>依赖</td><td>只提 Python/Tkinter</td><td>实际打包 Pillow、cryptography 46.0.3、bcrypt、requests/urllib3、certifi 等</td></tr>
+</table>
+
+<h2 id="s4">5 · 代码结构（81 个代码对象）</h2>
+<p>整个应用是一个约 2000+ 行的单文件脚本，无包结构。按行号分组（完整清单见 <code>.workbuddy/analysis/main_structure.json</code>）：</p>
+<table>
+<tr><th>分组</th><th>行号范围</th><th>主要函数（节选）</th></tr>
+<tr><td>消息弹窗 <code>PopupNotification</code></td><td>17–294</td><td><code>load_theme_icons</code> 45 · <code>create_popup</code> 91 · <code>show_animation</code> 157 · <code>hide_animation</code> 196 · <code>refresh_popup_positions</code> 246 · <code>show_message</code> 271</td></tr>
+<tr><td>初始化 / UI</td><td>297–565</td><td><code>__init__</code> 297（6330 B 字节码，最大函数）· <code>show_right_click_menu</code> 454</td></tr>
+<tr><td>局域网发现</td><td>566–773</td><td><code>get_local_ip</code> 566 · <code>get_network_ips</code> 578 · <code>check_port</code> 587 · <code>update_progress</code> 599 · <code>broadcast_discovery</code> 610 · <code>threaded_port_scan</code> 646 · <code>find_existing_chatroom</code> 690 · <code>update_scan_progress</code> 739 · <code>search_chatroom_thread</code> 767</td></tr>
+<tr><td>建/加入房间</td><td>774–884</td><td><code>join_chatroom</code> 774 · <code>create_chatroom</code> 808 · <code>discovery_service</code> 843 · <code>accept_connections</code> 866</td></tr>
+<tr><td>消息与命令</td><td>885–1292</td><td><code>receive_messages</code> 885（3232 B，协议分发核心）· <code>send_message</code> 1243 · <code>add_message</code> 1272 · <code>open_command_line</code> 1293</td></tr>
+<tr><td>迁移 / 用户列表</td><td>1025–1271</td><td><code>handle_migration</code> 1025 · <code>handle_promotion</code> 1055 · <code>disconnect_all</code> 1075 · <code>reconnect_to_server</code> 1090 · <code>select_new_server</code> 1100 · <code>initiate_migration</code> 1114 · <code>broadcast_user_list</code> 1198 · <code>send_user_list</code> 1225</td></tr>
+<tr><td>设置 / 更新</td><td>1332–1673</td><td><code>open_settings</code> 1332（4928 B，含 7 个内嵌 lambda）· <code>check_update</code> 1501 · <code>open_github</code> 1464 · <code>download_update</code> 1496 · <code>apply_font_settings</code> 1655</td></tr>
+<tr><td>队列 / 登录</td><td>1674–1734</td><td><code>process_queue</code> 1674 · <code>handle_search_result</code> 1688 · <code>login</code> 1715</td></tr>
+<tr><td>文件传输</td><td>1734–1978</td><td><code>start_file_transfer_server</code> 1734 · <code>calculate_file_hash</code> 1775 · <code>handle_file_receive</code> 1787 · <code>receive_file</code> 1835 · <code>send_file_to_user</code> 1880 · <code>send_file</code> 1916</td></tr>
+<tr><td>启动</td><td>1979–2020</td><td><code>auto_check_update</code> 1979 · <code>start</code> 2012</td></tr>
+</table>
+<p class="small">可复核的原始材料：<code>main_dis.txt</code>（全量反汇编）、<code>dis/*.txt</code>（34 个核心函数单独反汇编）、<code>main_strings_by_func.txt</code>（按函数分组的 402 条字符串/数字常量与 co_names/co_varnames）。</p>
+
+<h2 id="s5">6 · 依赖与资源</h2>
+<div class="two">
+<div>
+<h3>PYZ 425 模块（Top 12 前缀）</h3>
+<table>
+<tr><th>前缀</th><th>数</th><th>前缀</th><th>数</th></tr>
+<tr><td>PIL</td><td>76</td><td>tkinter</td><td>10</td></tr>
+<tr><td>cryptography</td><td>49</td><td>charset_normalizer</td><td>8</td></tr>
+<tr><td>urllib3</td><td>36</td><td>ctypes</td><td>8</td></tr>
+<tr><td>asyncio</td><td>32</td><td>idna</td><td>6</td></tr>
+<tr><td>multiprocessing</td><td>23</td><td>concurrent</td><td>5</td></tr>
+<tr><td>importlib</td><td>22</td><td>json / http / urllib</td><td>4 / 4 / 5</td></tr>
+<tr><td>email</td><td>20</td><td>certifi / bcrypt</td><td>2 / 1</td></tr>
+</table>
+<p class="small"><code>main.py</code> 顶层实际 import：socket、threading、tkinter(子模块)、ipaddress、time、queue、logging、random、datetime、os、PIL(Image/ImageTk)、traceback、math、hashlib、subprocess(局部)、requests(局部)。<strong>cryptography / bcrypt 被打包但业务代码未使用</strong>，属依赖冗余。</p>
+</div>
+<div>
+<h3>随包资源（节选）</h3>
+<table>
+<tr><th>路径</th><th>说明</th></tr>
+<tr><td><code>image/logo.png</code> 31,446 B</td><td>登录界面 logo</td></tr>
+<tr><td><code>image/icon.ico</code> 35,630 B</td><td>应用图标（与 PE 资源同源）</td></tr>
+<tr><td><code>image/message-Light.png</code></td><td>弹窗主题图标（Light 主题）</td></tr>
+<tr><td><code>image/join.png / left.png / update.png</code></td><td>界面按钮图标</td></tr>
+<tr><td><code>base_library.zip</code> 1.4 MB</td><td>CPython 标准库字节码</td></tr>
+<tr><td><code>certifi/cacert.pem</code> 287 KB</td><td>HTTPS 更新检查用 CA</td></tr>
+<tr><td><code>cryptography-46.0.3.dist-info/*</code></td><td>版本元数据（可读）</td></tr>
+<tr><td><code>_tcl_data / _tk_data</code>（~700 项）</td><td>Tcl/Tk 运行时数据、时区库</td></tr>
+<tr><td><code>PIL/_avif...pyd</code> 7.8 MB</td><td>单个最大文件，AVIF 插件</td></tr>
+</table>
+</div>
+</div>
+<p class="small">发布暴露检查：<span class="tag t-obs">packaging.extractable_payload</span>（low，1454 个可读成员）与 <span class="tag t-obs">native.pdb_path</span>（low，8 个来自 CPython 官方 pyd 的构建机 PDB 路径，如 <code>D:\a\1\b\bin\amd64\_asyncio.pdb</code>）为已观察项；911 个文本成员中未命中凭据标记；Electron/Go/Rust/source-map 等检查为 unknown 或 not_assessed（本目标不适用）。该审计不等于安全结论。</p>
+
+<h2 id="s6">7 · 开发视角：缺陷与风险清单</h2>
+<table>
+<tr><th>级别</th><th>问题</th><th>静态证据</th><th>建议</th></tr>
+<tr><td><span class="tag t-risk">严重</span></td><td>未认证远程命令执行</td><td><code>receive_messages</code> offset 1384–1856：<code>COMMAND:</code> 分支 → <code>subprocess.run(shell=True, capture_output=True, text=True, timeout=5)</code>；仅校验报文中的目标用户名，无来源认证</td><td>删除该特性；如必须保留，改为显式开关 + 本地白名单 + 交互式二次确认 + 不用 shell</td></tr>
+<tr><td><span class="tag t-risk">严重</span></td><td>客户端消息疑似无法互通</td><td><code>receive_messages</code> 普通消息分支（1860–1966）仅 <code>add_message</code>；全函数仅 2 处 <code>send</code>（<code>USERNAME_EXISTS</code> 与 <code>send_user_list</code>），无转发循环；客户端仅 <code>join_chatroom</code> 建立一条连接</td><td>服务器侧收到普通消息后广播给除来源外的所有 socket；补运行时集成测试</td></tr>
+<tr><td><span class="tag t-risk">高</span></td><td>无消息边界 / 协议注入</td><td>控制报文与聊天报文共用 <code>:</code> 分隔、<code>recv(1024)</code> 单次读取；用户名或消息以 <code>JOIN:</code>/<code>USERLIST:</code>/<code>COMMAND:</code> 开头即被当作控制指令</td><td>改为 <code>magic + length + JSON</code> 帧；控制面与数据面分离；按长度循环读取</td></tr>
+<tr><td><span class="tag t-risk">高</span></td><td>明文、无身份绑定</td><td>所有报文 <code>str.encode()</code>/<code>bytes.decode()</code>；用户名由客户端自报；<code>USERLIST:</code> 可覆盖任意客户端用户列表</td><td>预共享密钥 + HMAC 或 TLS；服务端分配会话 ID</td></tr>
+<tr><td><span class="tag t-risk">中</span></td><td>文件传输路径 / 大小不可信</td><td>接收端 <code>os.path.join(self.file_receive_dir, filename)</code>，<code>filename</code> 来自对端且未见 <code>basename</code> 清洗；无文件大小上限；仅传后校验、失败无重传</td><td>强制 <code>basename</code> + 字符白名单、限制单文件大小、分块序号 + 断点续传</td></tr>
+<tr><td><span class="tag t-inf">中</span></td><td>迁移无仲裁</td><td><code>PROMOTE:/MIGRATE:</code> + <code>sleep(1)</code>，无任期/确认/回滚</td><td>引入任期号、确认应答与超时重选</td></tr>
+<tr><td><span class="tag t-inf">低</span></td><td>体积与依赖冗余</td><td>cryptography 46.0.3（49 模块）、bcrypt、PIL/_avif 7.8 MB 被打包但业务未用</td><td>精简 hiddenimports / excludes，或按需加载</td></tr>
+<tr><td><span class="tag t-inf">低</span></td><td>更新链路只提示不校验</td><td>仅比较 GitHub <code>tag_name</code> 与本地 <code>5.1</code>，下载走浏览器打开 releases 页面</td><td>若将来做自动更新，需校验发布物签名/哈希</td></tr>
+<tr><td><span class="tag t-unk">未验证</span></td><td>线程安全边界</td><td>队列 + <code>after</code> 是正确模式，但 <code>add_message</code> 等是否被工作线程直接调用需逐路径核对</td><td>运行时用 Tk 线程断言或代码审查确认</td></tr>
+</table>
+
+<h2 id="s7">8 · 面向代码开发的重建路线</h2>
+<div class="box ok"><strong>可复现性很高</strong>：项目 MIT 开源、CArchive 未加密、Python 3.13 字节码与本机解释器一致。本次已把 <code>main.pyc</code> 及 PYZ 全部 425 个模块还原为可读取的 <code>.pyc</code>，并导出全量反汇编与常量表；不需要任何密码或运行时插桩。</div>
+<ol>
+<li><strong>拿完整逻辑</strong>：以 <code>main_dis.txt</code> + <code>main_strings_by_func.txt</code> + 34 个 <code>dis/*.txt</code> 为底稿，按 81 个 code object 逐函数重构 Python 源码；CPython 3.13 目前缺少成熟反编译器，人工/LLM 辅助重构比强行反编译更可靠。</li>
+<li><strong>先重写协议层</strong>：把本报告第 4 节做成独立模块（帧格式、报文类型、状态机），再挂 GUI；参考随附的 <code>protocol_reference.py</code>（根据静态分析重建的报文常量与编解码骨架，未运行验证）。</li>
+<li><strong>补测试</strong>：多客户端广播、并发 JOIN、长消息/含冒号消息、重名、断线、迁移、文件接受/拒绝/哈希不一致等用例；当前实现在这些路径上静态看都缺少保护。</li>
+<li><strong>安全整改优先于功能扩展</strong>：移除 <code>COMMAND:</code>、加认证与长度帧、修服务器转发，再考虑私聊/加密/表情等 README 里的待办。</li>
+<li><strong>打包复现</strong>：Python 3.13 + PyInstaller（onefile、<code>--contents-directory _internal</code>）+ Pillow + requests + certifi；图标与 <code>image/</code> 目录需与 exe 同层/打包进 <code>base_dir</code> 查找路径。</li>
+</ol>
+<h3>交付的数据文件</h3>
+<table>
+<tr><th>路径（相对工作区）</th><th>内容</th></tr>
+<tr><td><code>.workbuddy/analysis/carchive_toc.json</code></td><td>1031 条 CArchive 条目（名称/类型/偏移/压缩前后大小）</td></tr>
+<tr><td><code>.workbuddy/analysis/pyz_toc.json</code></td><td>PYZ 425 模块索引（类型/偏移/长度）</td></tr>
+<tr><td><code>.workbuddy/analysis/extracted/main.pyc</code></td><td>入口脚本标准 .pyc，98,681 B，SHA-256 <code>9109b9a150de…358bf99c7</code></td></tr>
+<tr><td><code>.workbuddy/analysis/pyz_modules/*.pyc</code></td><td>425 个可读取的标准库/第三方模块 .pyc</td></tr>
+<tr><td><code>.workbuddy/analysis/main_structure.json</code></td><td>81 个代码对象的名称、行号、参数、局部变量、引用名</td></tr>
+<tr><td><code>.workbuddy/analysis/main_dis.txt</code> · <code>dis/*.txt</code></td><td>全量及 34 个核心函数的反汇编</td></tr>
+<tr><td><code>.workbuddy/analysis/main_strings_by_func.txt</code></td><td>402 条字符串常量、数字常量、co_names / co_varnames</td></tr>
+<tr><td><code>FilesaCOChat_协议参考.md</code> · <code>protocol_reference.py</code></td><td>协议规范与报文骨架（开发用）</td></tr>
+</table>
+
+<h2 id="s8">9 · 证据、置信度与局限</h2>
+<h3>关键证据 ID（REA 记录）</h3>
+<table>
+<tr><th>证据 ID</th><th>操作</th><th>结论</th></tr>
+<tr><td class="ev">ev_34b6673009c9a22e15a3852b708d0244212a50aa4a9030e6e754770babe1d0ff</td><td>inspect_artifact（完整清单）</td><td>pyinstaller 2.1 / Python 3.13 / 1031 条目 / 1455 节点哈希全通过</td></tr>
+<tr><td class="ev">ev_ad33d082c8db33d5b00b8d6a4fe28af40f1e9d35d9e29a469ab435acda7daad0</td><td>inventory summary</td><td>节点/边计数、无完整性矛盾</td></tr>
+<tr><td class="ev">ev_003e63a16c58e2df84a784668483db13df61de0ead57508586fb6bb5363c06f6</td><td>inspect_pe_imports</td><td>5 DLL / 146 函数 / imphash</td></tr>
+<tr><td class="ev">ev_56d348173d5439836eba0e649eb0422b0fcd90ce70ca76aba702c67c134b74be</td><td>inspect_pe_resources</td><td>3 项资源、图标组</td></tr>
+<tr><td class="ev">ev_ffa05a64ed6c57bc1cfcf1380198f00ea525ddfbdfe5ab1aca911cd32367c356</td><td>inspect_pe_certificates</td><td>安全目录缺失</td></tr>
+<tr><td class="ev">ev_57b9fb306df4640e5c9f35d6f6991da3a990d263d37484ea7d90fa903c298e94</td><td>inspect_python_pyc(main.pyc)</td><td>CPython 3.13 / 3442 marshal 对象 / 81 code objects / 98,665 B</td></tr>
+<tr><td class="ev">ev_fca2fb3c69e230849e12d0ee376963c85995046214655c8310df9b0656c17094</td><td>audit_release_exposure</td><td>2 项 low 暴露、10 unknown、3 not_assessed</td></tr>
+</table>
+<h3>局限（必须随结论一起保留）</h3>
+<ul>
+<li><strong>未执行目标程序</strong>，也未做任何运行时插桩/抓包；所有行为结论来自静态字节码与打包清单，端口监听、消息实际流转、Tk 线程行为均<span class="tag t-unk">未验证</span>。</li>
+<li><strong>没有反编译出完整 .py 源码</strong>；报告中的函数名、行号、常量、调用名是观测值，控制流语义是推断；个别分支（如消息转发）建议运行时复核。</li>
+<li>深度原生反汇编引擎（Ghidra / IDA / Kuna）在本机未配置；本目标为 Python 打包应用，原生部分只是 PyInstaller bootloader，未做函数级反编译，也不影响应用层结论。</li>
+<li>GitHub 仓库 main 分支只有网页与资源，<strong>没有 .py 源码</strong>；README 对应较旧版本，不能用作 5.1 行为的权威说明。</li>
+<li>PE 无证书目录只说明该目录缺失，不等价于「任何意义上都未签名」；REA 发布暴露审计也不等于安全评估。</li>
+</ul>
+
+<footer>由 REA（reverse-engineer-anything）静态分析流程生成 · 目标 SHA-256 <span class="ev">60bd7e21a226f8a67324d1aacfa8aaef49c842c63b8d5b9c1dda6b31c07a80d0</span> · 所有结论区分「观察 / 推断 / 未知」，证据保留在本次会话的 Evidence 记录与工作区数据文件中。</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# Build outputs (WinUI / .NET generate hundreds of MB under bin & obj).
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+
+# WiX intermediate symbol file.
+*.wixpdb
+
+# Publish payload: the loose self-contained runtime folder is reproducible with
+# `dotnet publish`; the distributable .msi and .zip ARE tracked.
+dist/*-win-x64/
+dist/_experiments/
+
+# Files received at runtime by the chat client.
+files/
+
+# Local agent working data.
+.workbuddy/

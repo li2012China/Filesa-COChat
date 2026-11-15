@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>FilesaCOChat.Core</RootNamespace>
+    <AssemblyName>FilesaCOChat.Core</AssemblyName>
+    <Description>Filesa COChat 5.1 protocol, networking and business logic. UI-agnostic so it can be unit/integration tested with plain dotnet.</Description>
+  </PropertyGroup>
+</Project>

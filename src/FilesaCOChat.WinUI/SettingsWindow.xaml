@@ -1,0 +1,159 @@
+<Window
+    x:Class="FilesaCOChat.WinUI.SettingsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="设置 · Filesa COChat">
+
+    <!-- A real top-level window instead of a ContentDialog: the main window may be
+         only as wide as the compact login card, and a dialog would clip the
+         right-hand column. This window has its own minimum size and scrolls. -->
+    <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Padding="24,20,24,12" Spacing="2">
+            <TextBlock Text="设置" FontSize="26" FontWeight="SemiBold" />
+            <TextBlock Text="外观、字体与通知即时生效；安全设置在本窗口关闭时保存。"
+                       FontSize="12" TextWrapping="Wrap"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </StackPanel>
+
+        <Grid Grid.Row="1" Padding="24,0,24,0" ColumnSpacing="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="180" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <ListView x:Name="Nav" SelectionMode="Single" VerticalAlignment="Stretch">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="MinHeight" Value="40" />
+                        <Setter Property="Padding" Value="10,0" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListViewItem Content="外观" />
+                <ListViewItem Content="字体" />
+                <ListViewItem Content="通知" />
+                <ListViewItem Content="安全" />
+                <ListViewItem Content="关于" />
+            </ListView>
+
+            <Border Grid.Column="1" BorderThickness="1" CornerRadius="8" Padding="20"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <Grid>
+
+                        <!-- ================= Appearance ================= -->
+                        <StackPanel x:Name="AppearancePage" Spacing="10" Padding="0,4,0,8">
+                            <TextBlock Text="主题" FontSize="16" FontWeight="SemiBold" />
+                            <TextBlock Text="深色或浅色界面。选择“跟随系统”时随 Windows 主题自动切换。"
+                                       FontSize="12" TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <ComboBox x:Name="ThemeCombo" MinWidth="280" HorizontalAlignment="Left">
+                                <ComboBoxItem Content="跟随系统" />
+                                <ComboBoxItem Content="浅色" />
+                                <ComboBoxItem Content="深色" />
+                            </ComboBox>
+                            <TextBlock Text="选择会立即生效并写入用户设置，下次启动时自动恢复。"
+                                       FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <!-- ================= Font ================= -->
+                        <StackPanel x:Name="FontPage" Spacing="10" Padding="0,4,0,8"
+                                    Visibility="Collapsed">
+                            <TextBlock Text="字体" FontSize="16" FontWeight="SemiBold" />
+                            <TextBlock Text="只影响聊天消息区域，界面控件保持系统字体。"
+                                       FontSize="12" TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <ComboBox x:Name="FontCombo" Header="字体" MinWidth="280"
+                                      HorizontalAlignment="Left" />
+                            <NumberBox x:Name="FontSizeBox" Header="字号" Minimum="8" Maximum="48"
+                                       SmallChange="1" Value="14"
+                                       SpinButtonPlacementMode="Compact"
+                                       MinWidth="200" HorizontalAlignment="Left" />
+                            <ToggleSwitch x:Name="BoldSwitch" Header="粗体" />
+                            <TextBlock Text="预览" FontSize="12" Margin="0,6,0,0" />
+                            <Border Padding="12,10" CornerRadius="6"
+                                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                <TextBlock x:Name="FontPreview" Text="这是一个字体预览示例"
+                                           TextWrapping="Wrap" />
+                            </Border>
+                            <Button x:Name="FontApplyButton" Content="应用字体设置" Margin="0,4,0,0"
+                                    Click="FontApply_Click" />
+                            <TextBlock x:Name="FontResultText" FontSize="12" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <!-- ================= Notifications ================= -->
+                        <StackPanel x:Name="NotifyPage" Spacing="10" Padding="0,4,0,8"
+                                    Visibility="Collapsed">
+                            <TextBlock Text="系统通知" FontSize="16" FontWeight="SemiBold" />
+                            <TextBlock Text="这里的通知指 Windows 系统级通知：收到新消息时由通知中心在屏幕右下角弹出，并在通知中心留档。它不是应用内自绘的提示条，因此窗口最小化时也能看到。"
+                                       FontSize="12" TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <ToggleSwitch x:Name="NotificationsSwitch" Header="启用系统通知" />
+                            <TextBlock x:Name="NotificationsHint" FontSize="12" TextWrapping="Wrap" />
+                            <TextBlock x:Name="NotifyStatusText" FontSize="12" TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <Button x:Name="TestNotificationButton" Content="发送测试通知" Margin="0,4,0,0" />
+                            <TextBlock Text="如果收不到通知，请检查「设置 › 系统 › 通知」中 Filesa COChat 的开关，以及“专注助手 / 勿扰”是否开启。"
+                                       FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <!-- ================= Security ================= -->
+                        <StackPanel x:Name="SecurityPage" Spacing="10" Padding="0,4,0,8"
+                                    Visibility="Collapsed">
+                            <TextBlock Text="安全" FontSize="16" FontWeight="SemiBold" />
+                            <PasswordBox x:Name="PskBox" Header="预共享密钥（可选）"
+                                         MinWidth="300" HorizontalAlignment="Left" />
+                            <TextBlock Text="留空 = 与 5.1 客户端混用（明文兼容模式）；设置后仅允许同样配置的新版客户端，并启用 HMAC 帧认证。"
+                                       FontSize="12" TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="密钥仅保存在本次运行的内存中，不会写入磁盘；重启后需要重新输入。"
+                                       FontSize="12" TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <!-- ================= About ================= -->
+                        <StackPanel x:Name="AboutPage" Spacing="10" Padding="0,4,0,8"
+                                    Visibility="Collapsed">
+                            <TextBlock Text="关于" FontSize="16" FontWeight="SemiBold" />
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="软件名称: Filesa COChat" />
+                                <TextBlock x:Name="VersionText" />
+                                <TextBlock Text="开发者: li2012China" />
+                                <TextBlock Text="Filesa COChat 是一个基于局域网的多人实时聊天软件，支持个性化字体，最重要的是无需服务端！"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button x:Name="CheckUpdateButton" Content="检查更新"
+                                        Click="CheckUpdate_Click" />
+                                <Button x:Name="OpenGithubButton" Content="打开 GitHub"
+                                        Click="OpenGithub_Click" />
+                                <Button x:Name="CreditsButton" Content="鸣谢"
+                                        Click="Credits_Click" />
+                            </StackPanel>
+                            <TextBlock x:Name="AboutResultText" FontSize="12" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                    </Grid>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2" Padding="24,12,24,20">
+            <TextBlock Text="设置会自动保存" VerticalAlignment="Center" FontSize="12"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Button x:Name="CloseButton" Content="关闭" HorizontalAlignment="Right" MinWidth="96"
+                    Style="{ThemeResource AccentButtonStyle}" Click="Close_Click" />
+        </Grid>
+    </Grid>
+</Window>

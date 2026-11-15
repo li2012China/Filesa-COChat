@@ -6,6 +6,8 @@ NetworkTests.Register();
 FileTransferTests.Register();
 TimelineTests.Register();
 SettingsTests.Register();
+DirectConnectTests.Register();
+RenderTests.Register();
 
 static string FindSolutionRoot()
 {

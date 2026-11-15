@@ -17,6 +17,8 @@ public sealed class KindToBrushConverter : IValueConverter
             ChatEntryKind.System => new SolidColorBrush(Colors.DodgerBlue),
             ChatEntryKind.Error => new SolidColorBrush(Colors.OrangeRed),
             ChatEntryKind.CommandResult => new SolidColorBrush(Colors.MediumPurple),
+            ChatEntryKind.CommandRequest => new SolidColorBrush(Colors.DarkOrange),
+            ChatEntryKind.CommandReceived => new SolidColorBrush(Colors.DeepSkyBlue),
             _ => new SolidColorBrush(Application.Current.RequestedTheme == ApplicationTheme.Dark
                      ? Colors.White : Colors.Black)
         };

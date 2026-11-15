@@ -18,6 +18,20 @@
             <SolidColorBrush x:Key="MineBubbleBorderBrush" Color="#FFB9D6EE" />
             <SolidColorBrush x:Key="OtherBubbleBrush" Color="#FFECEEF2" />
             <SolidColorBrush x:Key="OtherBubbleBorderBrush" Color="#FFD3D8DE" />
+            <!-- Command-line request bubble: warm "terminal" palette. All five
+                 brushes are refreshed for light/dark in ApplyBubbleTheme(). -->
+            <SolidColorBrush x:Key="CommandBubbleBrush" Color="#FFFFF6E9" />
+            <SolidColorBrush x:Key="CommandBubbleBorderBrush" Color="#FFD9A85C" />
+            <SolidColorBrush x:Key="CommandHeaderBrush" Color="#FFF7E3C0" />
+            <SolidColorBrush x:Key="CommandHeaderTextBrush" Color="#FF6B4A12" />
+            <SolidColorBrush x:Key="CommandBodyBrush" Color="#FF3A2A12" />
+            <!-- Received command bubble: cool "terminal" palette, mirrored from
+                 the warm outgoing one. Refreshed for light/dark in code-behind. -->
+            <SolidColorBrush x:Key="ReceivedCommandBubbleBrush" Color="#FFEAF3FB" />
+            <SolidColorBrush x:Key="ReceivedCommandBubbleBorderBrush" Color="#FF7EA9CE" />
+            <SolidColorBrush x:Key="ReceivedCommandHeaderBrush" Color="#FFD6E8F7" />
+            <SolidColorBrush x:Key="ReceivedCommandHeaderTextBrush" Color="#FF1B4B72" />
+            <SolidColorBrush x:Key="ReceivedCommandBodyBrush" Color="#FF16324A" />
 
             <!-- ================= Incoming: left aligned bubble ================= -->
             <DataTemplate x:Key="IncomingBubble">
@@ -44,7 +58,8 @@
                                 BorderBrush="{StaticResource OtherBubbleBorderBrush}"
                                 BorderThickness="1" CornerRadius="14,14,14,4"
                                 Padding="12,8" HorizontalAlignment="Left">
-                            <TextBlock Text="{Binding Text}" TextWrapping="Wrap"
+                            <!-- Attached behaviour turns URLs in the text into real Hyperlink inlines. -->
+                            <TextBlock local:LinkifiedText.Text="{Binding Text}" TextWrapping="Wrap"
                                        IsTextSelectionEnabled="True"
                                        ToolTipService.ToolTip="{Binding Timestamp, Converter={StaticResource TimeFmt}, ConverterParameter=Full}" />
                         </Border>
@@ -76,7 +91,7 @@
                                 BorderBrush="{StaticResource MineBubbleBorderBrush}"
                                 BorderThickness="1" CornerRadius="14,14,4,14"
                                 Padding="12,8" HorizontalAlignment="Right">
-                            <TextBlock Text="{Binding Text}" TextWrapping="Wrap"
+                            <TextBlock local:LinkifiedText.Text="{Binding Text}" TextWrapping="Wrap"
                                        IsTextSelectionEnabled="True"
                                        ToolTipService.ToolTip="{Binding Timestamp, Converter={StaticResource TimeFmt}, ConverterParameter=Full}" />
                         </Border>
@@ -89,7 +104,7 @@
                 <StackPanel Margin="0,7" HorizontalAlignment="Stretch" MaxWidth="620"
                             Spacing="2"
                             Loaded="ChatLineRoot_Loaded" DataContextChanged="ChatLineRoot_DataContextChanged">
-                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap"
+                    <TextBlock local:LinkifiedText.Text="{Binding Text}" TextWrapping="Wrap"
                                TextAlignment="Center" FontSize="12"
                                IsTextSelectionEnabled="True"
                                Foreground="{Binding Kind, Converter={StaticResource KindBrush}}"
@@ -104,10 +119,131 @@
                 </StackPanel>
             </DataTemplate>
 
+            <!-- ============ Command request: terminal-style outgoing bubble ============
+                 Right-aligned like an outgoing message, but with a labelled header,
+                 a monospace command body and its own warm palette. Switching the
+                 template is driven by ChatEntryKind.CommandRequest, so the wire
+                 format and the copy/audit text are untouched. -->
+            <DataTemplate x:Key="CommandBubble">
+                <Grid Margin="0,5" HorizontalAlignment="Stretch"
+                      Loaded="ChatLineRoot_Loaded" DataContextChanged="ChatLineRoot_DataContextChanged">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.28*" />
+                        <ColumnDefinition Width="0.72*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Right" MaxWidth="520"
+                                Spacing="4">
+                        <StackPanel Orientation="Horizontal" Spacing="8"
+                                    HorizontalAlignment="Right"
+                                    ToolTipService.ToolTip="{Binding Timestamp, Converter={StaticResource TimeFmt}, ConverterParameter=Full}">
+                            <TextBlock Text="{Binding Timestamp, Converter={StaticResource TimeFmt}}"
+                                       FontSize="11"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="{Binding Sender}" FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <Border Background="{StaticResource CommandBubbleBrush}"
+                                BorderBrush="{StaticResource CommandBubbleBorderBrush}"
+                                BorderThickness="1" CornerRadius="14,14,4,14"
+                                HorizontalAlignment="Right">
+                            <StackPanel>
+                                <Border Background="{StaticResource CommandHeaderBrush}"
+                                        CornerRadius="13,13,0,0" Padding="12,6">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                                  FontSize="13" Glyph="&#xE756;"
+                                                  Foreground="{StaticResource CommandHeaderTextBrush}" />
+                                        <TextBlock Text="命令行请求" FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource CommandHeaderTextBrush}" />
+                                        <TextBlock Text="{Binding CommandTarget}" FontSize="11"
+                                                   Foreground="{StaticResource CommandHeaderTextBrush}" />
+                                    </StackPanel>
+                                </Border>
+                                <TextBlock Margin="12,8,12,4" FontFamily="Consolas"
+                                           FontSize="13"
+                                           local:LinkifiedText.Text="{Binding CommandBody}"
+                                           TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                                           Foreground="{StaticResource CommandBodyBrush}"
+                                           ToolTipService.ToolTip="{Binding Timestamp, Converter={StaticResource TimeFmt}, ConverterParameter=Full}" />
+                                <!-- Full audit wording lives in the bubble now: the
+                                     duplicate Error system line is collapsed in
+                                     MainViewModel.AppendMessage. -->
+                                <TextBlock Margin="12,0,12,8" FontSize="10" TextWrapping="Wrap"
+                                           Text="{Binding CommandNotice}"
+                                           Foreground="{StaticResource CommandHeaderTextBrush}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
+
+            <!-- ============ Received command: terminal-style incoming bubble ============
+                 Left-aligned like an incoming message, cool palette so it can be told
+                 apart from the warm outgoing request at a glance. Driven by
+                 ChatEntryKind.CommandReceived; the [收到命令] audit text stays in
+                 ChatEntry.Text for logs, while the bubble shows the structured
+                 Origin / Target / Command fields. Never executes anything (D1). -->
+            <DataTemplate x:Key="ReceivedCommandBubble">
+                <Grid Margin="0,5" HorizontalAlignment="Stretch"
+                      Loaded="ChatLineRoot_Loaded" DataContextChanged="ChatLineRoot_DataContextChanged">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.72*" />
+                        <ColumnDefinition Width="0.28*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" HorizontalAlignment="Left" MaxWidth="520"
+                                Spacing="4">
+                        <StackPanel Orientation="Horizontal" Spacing="8"
+                                    ToolTipService.ToolTip="{Binding Timestamp, Converter={StaticResource TimeFmt}, ConverterParameter=Full}">
+                            <TextBlock Text="{Binding Sender}" FontSize="11"
+                                       FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="{Binding Timestamp, Converter={StaticResource TimeFmt}}"
+                                       FontSize="11"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <Border Background="{StaticResource ReceivedCommandBubbleBrush}"
+                                BorderBrush="{StaticResource ReceivedCommandBubbleBorderBrush}"
+                                BorderThickness="1" CornerRadius="14,14,14,4"
+                                HorizontalAlignment="Left">
+                            <StackPanel>
+                                <Border Background="{StaticResource ReceivedCommandHeaderBrush}"
+                                        CornerRadius="13,13,0,0" Padding="12,6">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                                  FontSize="13" Glyph="&#xE756;"
+                                                  Foreground="{StaticResource ReceivedCommandHeaderTextBrush}" />
+                                        <TextBlock Text="收到命令" FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource ReceivedCommandHeaderTextBrush}" />
+                                        <TextBlock Text="{Binding CommandSource}" FontSize="11"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{StaticResource ReceivedCommandHeaderTextBrush}" />
+                                        <TextBlock Text="{Binding CommandTarget}" FontSize="11"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{StaticResource ReceivedCommandHeaderTextBrush}" />
+                                    </StackPanel>
+                                </Border>
+                                <TextBlock Margin="12,8,12,4" FontFamily="Consolas"
+                                           FontSize="13"
+                                           local:LinkifiedText.Text="{Binding CommandBody}"
+                                           TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                                           Foreground="{StaticResource ReceivedCommandBodyBrush}"
+                                           ToolTipService.ToolTip="{Binding Timestamp, Converter={StaticResource TimeFmt}, ConverterParameter=Full}" />
+                                <TextBlock Margin="12,0,12,8" FontSize="10" TextWrapping="Wrap"
+                                           Text="{Binding CommandNotice}"
+                                           Foreground="{StaticResource ReceivedCommandHeaderTextBrush}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
+
             <local:ChatTemplateSelector x:Key="BubbleSelector"
                                         OtherTemplate="{StaticResource IncomingBubble}"
                                         MineTemplate="{StaticResource OutgoingBubble}"
-                                        SystemTemplate="{StaticResource SystemLine}" />
+                                        SystemTemplate="{StaticResource SystemLine}"
+                                        CommandTemplate="{StaticResource CommandBubble}"
+                                        ReceivedCommandTemplate="{StaticResource ReceivedCommandBubble}" />
         </Grid.Resources>
 
         <Grid.RowDefinitions>
@@ -120,7 +256,14 @@
         <!-- Compact card: the window itself is resized to this content while the
              user is logged out (see ApplyLoginWindowSize), so the page must not
              rely on extra room. Padding lives here so the measured size includes
-             it and the gear never sits flush against the frame. -->
+             it and the gear never sits flush against the frame.
+
+             Width is NOT auto-sized: the constructor pins it to LoginCardWidth.
+             A centre-aligned Grid without an explicit Width shrink-wraps to its
+             widest child, so the long "地址:端口" placeholder / port hint made the
+             whole card (and therefore every stretched TextBox) 252 DIP wide in
+             channel mode but only 192 DIP in LAN mode. Pinning the width makes
+             both tabs share one layout width and forces long text to wrap. -->
         <Grid x:Name="LoginPanel" Grid.RowSpan="3" Visibility="Visible"
               MaxWidth="460" Padding="24,12,24,20"
               VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -141,9 +284,50 @@
                 <TextBlock Text="局域网多人聊天 · 无需专用服务器" FontSize="13"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                            HorizontalAlignment="Center" />
-                <TextBlock Text="用户名:" Margin="0,14,0,0" />
-                <TextBox x:Name="UsernameBox" PlaceholderText="请输入用户名"
-                         KeyDown="UsernameBox_KeyDown" />
+                <!-- Two login modes. The LAN tab keeps the original fields / flow;
+                     the channel tab reveals address:port + username for a direct
+                     TCP join. Selection is wired in code (ApplyLoginMode). -->
+                <SelectorBar x:Name="LoginModeBar" Margin="0,14,0,0">
+                    <SelectorBarItem x:Name="LanModeItem" Text="搜索LAN" />
+                    <SelectorBarItem x:Name="ChannelModeItem" Text="连接指定频道" />
+                </SelectorBar>
+
+                <!-- Both modes share ONE layout slot. FreezeLoginFieldSlot() pins
+                     MinHeight to the taller (direct-connect) group exactly once at
+                     startup, so the login card - and therefore the window - is the
+                     same size in both tabs. Width is inherited from the pinned
+                     LoginPanel width; HorizontalAlignment="Stretch" is spelled out
+                     on every field group and TextBox so no theme/template override
+                     can shrink one tab's inputs to their intrinsic text width.
+                     The LAN fields are centred inside that reserved slot;
+                     everything below (button, progress, status) stays at a fixed
+                     Y position when switching tabs. -->
+                <Grid x:Name="LoginFieldsHost" MinHeight="210">
+                    <!-- Mode 1: 搜索LAN (unchanged fields and behaviour). -->
+                    <StackPanel x:Name="LanFields" Spacing="10" VerticalAlignment="Center"
+                                HorizontalAlignment="Stretch">
+                        <TextBlock Text="用户名:" Margin="0,10,0,0" />
+                        <TextBox x:Name="UsernameBox" PlaceholderText="请输入用户名"
+                                 HorizontalAlignment="Stretch"
+                                 KeyDown="UsernameBox_KeyDown" />
+                    </StackPanel>
+
+                    <!-- Mode 2: 连接指定频道. Port is optional; DirectEndpoint
+                         supplies ProtocolOptions.DefaultChatPort when omitted. -->
+                    <StackPanel x:Name="ChannelFields" Spacing="10" Visibility="Collapsed"
+                                HorizontalAlignment="Stretch">
+                        <TextBlock Text="地址:端口" Margin="0,10,0,0" />
+                        <TextBox x:Name="ChannelAddressBox" HorizontalAlignment="Stretch"
+                                 KeyDown="DirectInput_KeyDown" />
+                        <TextBlock x:Name="PortHint" FontSize="12" TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="用户名:" />
+                        <TextBox x:Name="ChannelUsernameBox" PlaceholderText="请输入用户名"
+                                 HorizontalAlignment="Stretch"
+                                 KeyDown="DirectInput_KeyDown" />
+                    </StackPanel>
+                </Grid>
+
                 <Button x:Name="LoginButton" Content="登录" HorizontalAlignment="Stretch"
                         Style="{ThemeResource AccentButtonStyle}" Click="Login_Click" />
                 <ProgressBar x:Name="SearchProgress" IsIndeterminate="True" Visibility="Collapsed" />

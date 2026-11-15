@@ -13,7 +13,7 @@
     "Defect": "D3 / D4",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 6
+    "Milliseconds": 7
   },
   {
     "Id": "T03",
@@ -21,7 +21,7 @@
     "Defect": "D3 / D4",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 28
+    "Milliseconds": 24
   },
   {
     "Id": "T04",
@@ -29,7 +29,7 @@
     "Defect": "D3",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 0
+    "Milliseconds": 1
   },
   {
     "Id": "T08",
@@ -37,7 +37,7 @@
     "Defect": "D8",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 31
+    "Milliseconds": 34
   },
   {
     "Id": "T05",
@@ -45,7 +45,7 @@
     "Defect": "D1",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 15
+    "Milliseconds": 14
   },
   {
     "Id": "T06",
@@ -53,7 +53,7 @@
     "Defect": "D5",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 16
+    "Milliseconds": 18
   },
   {
     "Id": "T07",
@@ -61,7 +61,7 @@
     "Defect": "D6",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 95
+    "Milliseconds": 94
   },
   {
     "Id": "T07b",
@@ -77,7 +77,7 @@
     "Defect": "D2 / D3",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 123
+    "Milliseconds": 130
   },
   {
     "Id": "T10",
@@ -85,7 +85,7 @@
     "Defect": "\u517C\u5BB9 / D3 / D4",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 496
+    "Milliseconds": 488
   },
   {
     "Id": "T11",
@@ -93,7 +93,7 @@
     "Defect": "\u517C\u5BB9",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 35
+    "Milliseconds": 41
   },
   {
     "Id": "T12",
@@ -101,7 +101,7 @@
     "Defect": "D3",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 1012
+    "Milliseconds": 1022
   },
   {
     "Id": "T15",
@@ -109,7 +109,7 @@
     "Defect": "D1",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 65
+    "Milliseconds": 961
   },
   {
     "Id": "T16",
@@ -117,7 +117,7 @@
     "Defect": "D6",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 130
+    "Milliseconds": 124
   },
   {
     "Id": "T17",
@@ -125,7 +125,7 @@
     "Defect": "D4",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 371
+    "Milliseconds": 358
   },
   {
     "Id": "T18",
@@ -133,7 +133,7 @@
     "Defect": "\u517C\u5BB9",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 7
+    "Milliseconds": 8
   },
   {
     "Id": "T19",
@@ -149,7 +149,7 @@
     "Defect": "D5 / \u517C\u5BB9",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 397
+    "Milliseconds": 398
   },
   {
     "Id": "T14",
@@ -157,7 +157,7 @@
     "Defect": "D5",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 108
+    "Milliseconds": 105
   },
   {
     "Id": "T21",
@@ -165,7 +165,7 @@
     "Defect": "UI-1",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 7
+    "Milliseconds": 6
   },
   {
     "Id": "T22",
@@ -229,7 +229,7 @@
     "Defect": "UI-3",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 35
+    "Milliseconds": 40
   },
   {
     "Id": "T30",
@@ -237,7 +237,7 @@
     "Defect": "UI-3",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 2
+    "Milliseconds": 3
   },
   {
     "Id": "T31",
@@ -245,6 +245,78 @@
     "Defect": "UI-3",
     "Passed": true,
     "Detail": "OK",
-    "Milliseconds": 5
+    "Milliseconds": 6
+  },
+  {
+    "Id": "T32",
+    "Name": "\u5B9A\u5411\u5730\u5740\u89E3\u6790\uFF1A\u7AEF\u53E3\u7F3A\u7701 / \u663E\u5F0F\u7AEF\u53E3 / IPv6 / \u4E3B\u673A\u540D",
+    "Defect": "UI-5",
+    "Passed": true,
+    "Detail": "OK",
+    "Milliseconds": 0
+  },
+  {
+    "Id": "T33",
+    "Name": "\u5B9A\u5411\u5730\u5740\u6821\u9A8C\uFF1A\u7A7A\u503C / \u975E\u6CD5\u7AEF\u53E3 / \u574F\u62EC\u53F7\u88AB\u62D2\u7EDD",
+    "Defect": "UI-5",
+    "Passed": true,
+    "Detail": "OK",
+    "Milliseconds": 0
+  },
+  {
+    "Id": "T34",
+    "Name": "\u8FDE\u63A5\u6307\u5B9A\u9891\u9053\uFF1A\u6309\u89E3\u6790\u51FA\u7684\u81EA\u5B9A\u4E49\u7AEF\u53E3\u76F4\u8FDE\u5E76\u6536\u53D1\u6D88\u606F",
+    "Defect": "UI-5",
+    "Passed": true,
+    "Detail": "OK",
+    "Milliseconds": 9
+  },
+  {
+    "Id": "T35",
+    "Name": "\u7AEF\u53E3\u7F3A\u7701\u8D70\u9ED8\u8BA4\u7AEF\u53E3\uFF0C\u4E14 LAN \u767B\u5F55\u6062\u590D\u6784\u9020\u65F6\u7684\u7AEF\u53E3",
+    "Defect": "UI-5",
+    "Passed": true,
+    "Detail": "OK",
+    "Milliseconds": 2059
+  },
+  {
+    "Id": "T36",
+    "Name": "\u6D88\u606F\u4E2D\u7684 http/https/www \u94FE\u63A5\u88AB\u8BC6\u522B\u4E14\u539F\u6587\u4E0D\u4E22\u5931",
+    "Defect": "UI-3",
+    "Passed": true,
+    "Detail": "OK",
+    "Milliseconds": 14
+  },
+  {
+    "Id": "T37",
+    "Name": "\u547D\u4EE4\u884C\u8BF7\u6C42\u662F\u72EC\u7ACB\u6C14\u6CE1\u7C7B\u522B\u800C\u975E\u7CFB\u7EDF\u884C",
+    "Defect": "UI-3",
+    "Passed": true,
+    "Detail": "OK",
+    "Milliseconds": 0
+  },
+  {
+    "Id": "T38",
+    "Name": "SendCommandAsync \u53D1\u51FA CommandRequest \u4E14\u4ECD\u4E0D\u6267\u884C",
+    "Defect": "UI-3/D1",
+    "Passed": true,
+    "Detail": "OK",
+    "Milliseconds": 3
+  },
+  {
+    "Id": "T39",
+    "Name": "\u6536\u5230\u7684\u547D\u4EE4\u662F\u72EC\u7ACB\u6C14\u6CE1\u7C7B\u522B\u4E14\u91CD\u590D\u5B89\u5168\u63D0\u793A\u53EF\u6298\u53E0",
+    "Defect": "UI-3/D1",
+    "Passed": true,
+    "Detail": "OK",
+    "Milliseconds": 1
+  },
+  {
+    "Id": "T40",
+    "Name": "\u771F\u5B9E FCCH COMMAND \u5E27\u5230\u8FBE\u65F6\u4EA7\u751F CommandReceived \u6C14\u6CE1\u6570\u636E",
+    "Defect": "UI-3/D1",
+    "Passed": true,
+    "Detail": "OK",
+    "Milliseconds": 65
   }
 ]

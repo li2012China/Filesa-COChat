@@ -27,6 +27,29 @@ public sealed class ChatLine : INotifyPropertyChanged
     /// <summary>True for every line rendered by the centred SystemLine template.</summary>
     public bool IsSystemLine => ChatTimeline.IsSystemLine(Entry);
 
+    /// <summary>True for the local transcript of a user-issued command request.</summary>
+    public bool IsCommandRequest => Entry.Kind == ChatEntryKind.CommandRequest;
+
+    /// <summary>True for an incoming COMMAND frame (left-aligned terminal bubble).</summary>
+    public bool IsCommandReceived => Entry.Kind == ChatEntryKind.CommandReceived;
+
+    /// <summary>Target shown in the sent-command bubble header ("→ alice").</summary>
+    public string CommandTarget =>
+        Entry.Target is { Length: > 0 } target ? "→ " + target : string.Empty;
+
+    /// <summary>Origin shown in the received-command bubble header ("← attacker").</summary>
+    public string CommandSource =>
+        Entry.Origin is { Length: > 0 } origin ? "← " + origin : string.Empty;
+
+    /// <summary>Full refusal wording, rendered inside both command bubbles.</summary>
+    public string CommandNotice => UiText.RemoteCommandDisabled;
+
+    /// <summary>
+    /// Command text in a monospace body. Falls back to the full transcript for
+    /// entries that predate the structured Target/Command payload.
+    /// </summary>
+    public string CommandBody => Entry.Command ?? Entry.Text;
+
     private bool _showTimestamp = true;
 
     /// <summary>

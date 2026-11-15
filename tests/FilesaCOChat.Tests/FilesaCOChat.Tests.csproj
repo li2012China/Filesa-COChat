@@ -11,5 +11,8 @@
          source used by the UI can also be exercised head-less here. -->
     <Compile Include="..\..\src\FilesaCOChat.WinUI\ViewModels\ChatLine.cs" Link="Linked\ChatLine.cs" />
     <Compile Include="..\..\src\FilesaCOChat.WinUI\ViewModels\ChatTimeline.cs" Link="Linked\ChatTimeline.cs" />
+    <!-- LinkParser is intentionally WinUI-free so the exact URL tokeniser used
+         by the bubbles can be verified head-less here. -->
+    <Compile Include="..\..\src\FilesaCOChat.WinUI\ViewModels\LinkParser.cs" Link="Linked\LinkParser.cs" />
   </ItemGroup>
 </Project>

@@ -301,7 +301,9 @@ public sealed class ChatSession : IAsyncDisposable
     /// <summary>D1 fix: a COMMAND frame is still emitted (wire compatibility) but is never executed.</summary>
     public async Task SendCommandAsync(string target, string command, CancellationToken ct = default)
     {
-        Emit(ChatEntry.Chat(Username, "[命令] 发送给 " + target + ": " + command));
+        // Own command requests get their own ChatEntryKind so the UI can render
+        // them as a terminal-style bubble instead of a normal chat bubble.
+        Emit(ChatEntry.CommandRequest(Username, target, command));
         Emit(ChatEntry.Error(UiText.RemoteCommandDisabled));
         CommandRefused?.Invoke(CommandPolicy.Evaluate(target, command, Username, fromNetwork: false).Reason);
         if (_serverLink is null) return;
@@ -406,7 +408,10 @@ public sealed class ChatSession : IAsyncDisposable
                 if (link.IsServerSide) await BroadcastChatAsync(parsed.Username, parsed.Text, link, ct); // D2
                 break;
             case MessageKind.Command:
-                HandleCommand(parsed.Target, parsed.Command, ct);
+                // Legacy COMMAND:<target>:<cmd> carries no origin field. On the
+                // receiving client the link belongs to the relay server, so its
+                // username would be misleading; fall back to "其他用户".
+                HandleCommand(parsed.Target, parsed.Command, null, ct);
                 if (link.IsServerSide) await ForwardCommandAsync(link, parsed.Target, parsed.Command, ct);
                 break;
             case MessageKind.Migrate:
@@ -462,7 +467,9 @@ public sealed class ChatSession : IAsyncDisposable
 
             case FrameTypes.Command:
             case FrameTypes.CommandRefused:
-                HandleCommand(f.Target ?? "", f.Command ?? "", ct);
+                // FCCH frames carry an explicit User field, so the receiving
+                // bubble can name the peer that issued the command.
+                HandleCommand(f.Target ?? "", f.Command ?? "", f.User, ct);
                 if (link.IsServerSide) await ForwardCommandAsync(link, f.Target ?? "", f.Command ?? "", ct);
                 break;
 
@@ -499,18 +506,32 @@ public sealed class ChatSession : IAsyncDisposable
         foreach (var link in _peers.Values.Where(p => p.Registered && !ReferenceEquals(p, origin)))
         {
             if (link.Mode == WireMode.Framed)
-                await SendFrameAsync(link, Frame.Make(FrameTypes.Command, SessionId, NextSeq()) with { Target = target, Command = command }, ct);
+                // Propagate the issuing peer's registered name so a framed
+                // recipient can label the received-command bubble with a source.
+                await SendFrameAsync(link, Frame.Make(FrameTypes.Command, SessionId, NextSeq()) with
+                { Target = target, Command = command, User = origin.Username }, ct);
             else
+                // Legacy wire format has no origin field by design (5.1 compat).
                 await SendLegacyAsync(link, LegacyCodec.Command(target, command), ct);
         }
     }
 
-    private void HandleCommand(string target, string command, CancellationToken ct)
+    private void HandleCommand(string target, string command, string? origin, CancellationToken ct)
     {
         var evaluation = CommandPolicy.EvaluateRemote(target, command, Username);
         CommandRefused?.Invoke(evaluation.Reason);
         if (!string.Equals(target, Username, StringComparison.Ordinal)) return;
-        Emit(ChatEntry.Chat(UiText.System, evaluation.DisplayText));
+        // Previously this emitted ChatEntry.Chat(UiText.System, ...): a Chat kind
+        // whose Sender is the reserved "系统" name, which ChatTimeline.IsSystemLine
+        // classifies as a centred plain line. The dedicated CommandReceived kind
+        // keeps the same audit text ("[收到命令] ...") but renders as a bubble.
+        // CommandPolicy owns the audit wording, so keep it as the single source
+        // even though the factory can build the same string on its own.
+        Emit(ChatEntry.CommandReceived(origin, target, command) with
+        { Text = evaluation.DisplayText });
+        // Kept as a Core-level event for logging / audit. The UI collapses this
+        // duplicate notice when it immediately follows a command bubble, because
+        // the bubble itself shows the full refusal text.
         Emit(ChatEntry.Error(UiText.RemoteCommandDisabled));
         // No process is started, ever. See Security/CommandPolicy.cs (D1).
     }

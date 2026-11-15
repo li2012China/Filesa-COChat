@@ -5,14 +5,14 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace FilesaCOChat.WinUI;
 
-public enum BubbleSide { Other, Mine, System }
-
 /// <summary>
-/// Picks one of three chat-line templates. Authoritative rule:
-///   - system / error / command-result entries, and entries whose sender is the
-///     reserved "system" name, are centred plain lines (no bubble);
-///   - chat entries whose sender equals the local username are outgoing (right);
-///   - everything else is incoming (left).
+/// Thin XAML adapter over <see cref="ChatTimeline.Classify"/>. The decision
+/// itself lives in the WinUI-free timeline file so it can be unit-tested:
+///   - CommandRequest  -> right-aligned "sent command" terminal bubble;
+///   - CommandReceived -> left-aligned "received command" terminal bubble;
+///   - System / Error / CommandResult / Sender == "系统" -> centred plain line;
+///   - Sender == local username -> right-aligned normal bubble;
+///   - everything else -> left-aligned normal bubble.
 /// Ordering is NOT changed here: the ListView keeps the ObservableCollection's
 /// append order. Timestamp grouping is a per-line flag resolved by ChatTimeline,
 /// not a template decision.
@@ -25,30 +25,26 @@ public sealed class ChatTemplateSelector : DataTemplateSelector
     public DataTemplate? OtherTemplate { get; set; }
     public DataTemplate? MineTemplate { get; set; }
     public DataTemplate? SystemTemplate { get; set; }
+    public DataTemplate? CommandTemplate { get; set; }
+    public DataTemplate? ReceivedCommandTemplate { get; set; }
 
-    public BubbleSide Classify(ChatLine line) => Classify(line.Entry);
+    public BubbleCategory Classify(ChatLine line) => Classify(line.Entry);
 
-    public BubbleSide Classify(ChatEntry entry)
-    {
-        if (ChatTimeline.IsSystemLine(entry))
-            return BubbleSide.System;
-
-        var me = UsernameProvider?.Invoke() ?? string.Empty;
-        return me.Length > 0 && string.Equals(entry.Sender, me, StringComparison.Ordinal)
-            ? BubbleSide.Mine
-            : BubbleSide.Other;
-    }
+    public BubbleCategory Classify(ChatEntry entry) =>
+        ChatTimeline.Classify(entry, UsernameProvider?.Invoke() ?? string.Empty);
 
     protected override DataTemplate SelectTemplateCore(object item)
     {
-        BubbleSide side;
-        if (item is ChatLine line) side = Classify(line);
-        else if (item is ChatEntry entry) side = Classify(entry);
+        BubbleCategory category;
+        if (item is ChatLine line) category = Classify(line);
+        else if (item is ChatEntry entry) category = Classify(entry);
         else return base.SelectTemplateCore(item);
-        DataTemplate? chosen = side switch
+        DataTemplate? chosen = category switch
         {
-            BubbleSide.Mine => MineTemplate,
-            BubbleSide.System => SystemTemplate,
+            BubbleCategory.Mine => MineTemplate,
+            BubbleCategory.System => SystemTemplate,
+            BubbleCategory.CommandRequest => CommandTemplate,
+            BubbleCategory.CommandReceived => ReceivedCommandTemplate,
             _ => OtherTemplate
         };
         return chosen ?? base.SelectTemplateCore(item);

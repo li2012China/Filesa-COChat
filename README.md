@@ -23,8 +23,9 @@
 
 ```
 FilesaCOChat.sln
-├── src/FilesaCOChat.Core/          协议、网络、安全策略、门面（16 文件 / 2480 行）
+├── src/FilesaCOChat.Core/          协议、网络、安全策略、门面（17 文件 / 2606 行）
 │   ├── AppInfo.cs                  产品名与版本号单一来源（installer 也从这里读）
+│   ├── DirectEndpoint.cs           「地址:端口」解析与缺省端口回落
 │   ├── Protocol/LegacyCodec.cs     原版裸报文（逐字节兼容 5.1）
 │   ├── Protocol/SecureFrame.cs     FCCH 长度帧 + HMAC-SHA256 + 会话 ID / 序列号
 │   ├── Net/ChatSession.cs          服务端/客户端双角色、显式广播、迁移
@@ -38,7 +39,7 @@ FilesaCOChat.sln
 │   ├── ChatApplication.cs          UI 无关门面（对应 main.py 的 FilesaCOChat 类）
 │   ├── UiText.cs                   原字节码中文文案，逐字保留
 │   └── ProtocolOptions.cs          全部端口 / 超时 / 阈值常量
-├── src/FilesaCOChat.WinUI/         WinUI 3 界面（13 文件 / 2366 行）
+├── src/FilesaCOChat.WinUI/         WinUI 3 界面（13 文件 / 2491 行）
 │   ├── MainWindow.xaml(.cs)        气泡消息区 / 用户列表 / 输入 / 文件 / 命令行 / 登录
 │   ├── SettingsWindow.xaml(.cs)    独立设置窗口：侧边栏分类 / 主题 / 字体 / 通知 / 安全
 │   ├── SystemNotifier.cs           Windows 通知中心 toast（AppNotificationManager）
@@ -46,7 +47,7 @@ FilesaCOChat.sln
 │   ├── Converters.cs               消息类型配色 + HH:mm 时间线
 │   ├── ViewModels/MainViewModel.cs 所有核心事件经 DispatcherQueue 编组（D9）
 │   └── Assets/                     从原 exe 提取的 image/*.png、icon.ico
-└── tests/FilesaCOChat.Tests/       31 个可运行用例（8 文件 / 1167 行），零第三方依赖
+└── tests/FilesaCOChat.Tests/       35 个可运行用例（9 文件 / 1293 行），零第三方依赖
 ```
 
 ## 快速开始
@@ -68,10 +69,10 @@ dotnet publish src/FilesaCOChat.WinUI/FilesaCOChat.WinUI.csproj -c Release -r wi
 
 | 文件 | 说明 |
 |---|---|
-| `dist/FilesaCOChat-7.0-win-x64/FilesaCOChat.WinUI.exe` | **主可执行文件**，307,712 B，SHA-256 `cc07c03d45ce…`；双击即可运行，无需安装 Windows App Runtime。程序集为同目录的 `FilesaCOChat.WinUI.dll`（托管代码 + 编译后的 XAML），更新界面后 exe 本身不变、dll 变化属正常 |
-| `dist/FilesaCOChat-7.0-win-x64/` | 同目录 266 个文件 / 89.1 MB，**必须与 exe 一起分发**（含 WinUI 运行时 DLL、`resources.pri`、`Assets/`） |
-| `dist/FilesaCOChat-7.0-win-x64.zip` | 绿色分发包，29.2 MB，266 项校验通过；解压后运行 exe |
-| `dist/FilesaCOChat-7.0-Setup.msi` | **安装包**，24.7 MB（24,682,493 B）；双击安装、走标准卸载流程，详见下节 |
+| `dist/FilesaCOChat-7.0-win-x64/FilesaCOChat.WinUI.exe` | **主可执行文件**，308,224 B，SHA-256 `33fb25bfc7bd…`；双击即可运行，无需安装 Windows App Runtime。托管代码与编译后的 XAML 都在同目录的 `FilesaCOChat.WinUI.dll`（299,520 B）和 `FilesaCOChat.Core.dll`（151,552 B），二者必须与 exe 一起分发 |
+| `dist/FilesaCOChat-7.0-win-x64/` | 同目录 266 个文件 / 90 MB，**必须与 exe 一起分发**（含 WinUI 运行时 DLL、`resources.pri`、`Assets/`） |
+| `dist/FilesaCOChat-7.0-win-x64.zip` | 绿色分发包，30,733,846 B（SHA-256 `053e4130…`），266 项校验通过；解压后运行 exe |
+| `dist/FilesaCOChat-7.0-Setup.msi` | **安装包**，24,662,013 B（SHA-256 `e4edb5d9…`）；双击安装、走标准卸载流程，详见下节 |
 | `dist/_experiments/` | 失败的单文件尝试，仅作证据，**勿使用** |
 
 实测：Release exe 启动后主窗口 `Filesa COChat 7.0 · WinUI 3`、Responding=True、无运行时弹窗。
@@ -91,7 +92,7 @@ dotnet build src/FilesaCOChat.WinUI/FilesaCOChat.WinUI.csproj -r win-arm64
 
 | 项 | 值 |
 |---|---|
-| 产物 | `dist/FilesaCOChat-7.0-Setup.msi`，24,682,493 B（24.7 MB），`ProductVersion 7.0.0` |
+| 产物 | `dist/FilesaCOChat-7.0-Setup.msi`，24,678,397 B（24.7 MB），`ProductVersion 7.0.0` |
 | 安装位置 | `%LOCALAPPDATA%\Programs\FilesaCOChat`（**per-user，不弹 UAC、不需要管理员**） |
 | 注册项 | 设置 → 应用 中显示「Filesa COChat 7.0 / Filesa」；卸载或 `msiexec /x` 均可 |
 | 快捷方式 | 开始菜单 → `Filesa COChat`（图标取自 `Assets\icon.ico`） |
@@ -143,7 +144,7 @@ Runtime Version 1.6 (MSIX package version >= 6000.373.1641.0)」并立即退出�
 用的自动引导初始化器（`WindowsAppSdkBootstrapInitialize=false`）。这保持了原 PyInstaller
 单文件版「用户无需安装依赖」的行为。
 
-> 代价：输出从单文件 23 MB 变成 267 个文件 / 89.1 MB 的文件夹（zip 29.2 MB）。
+> 代价：输出从单文件 23 MB 变成 266 个文件 / 89.1 MB 的文件夹（zip 29.2 MB）。
 >
 > **单文件 exe 已实测不可行**：尝试 `PublishSingleFile=true --self-contained true` 时 exe
 > 能生成（63 MB），但启动即崩溃 `COMException 0x80040111 ClassFactory 无法供应请求的类`
@@ -153,14 +154,45 @@ Runtime Version 1.6 (MSIX package version >= 6000.373.1641.0)」并立即退出�
 
 ## 聊天气泡界面
 
-消息区使用 `DataTemplateSelector` 在渲染时按 `(Kind, Sender)` 选择三种模板，只改展示层，
-Core / 协议层零改动：
+消息区使用 `DataTemplateSelector` 在渲染时按 `(Kind, Sender)` 选择五种模板，只改展示层，
+线上报文格式零改动：
 
 | 消息 | 模板 | 表现 |
 |---|---|---|
 | 对方（其他人） | `IncomingBubble` | 左侧圆角气泡，上方左对齐显示「用户名 + HH:mm」 |
 | 自己（`Sender == 本地用户名`） | `OutgoingBubble` | 右侧蓝色圆角气泡，上方右对齐显示「HH:mm + 用户名」 |
+| 自己发出的命令行请求（`Kind == CommandRequest`） | `CommandBubble` | 右侧「终端」式气泡：暖色标题栏（终端图标 + 「命令行请求 → 目标」）、Consolas 等宽命令正文、底部完整安全提示 |
+| **收到的命令帧**（`Kind == CommandReceived`） | `ReceivedCommandBubble` | **左侧「终端」式气泡**：冷色标题栏（「收到命令 ← 发起方 → 目标」）、Consolas 等宽命令正文、底部完整安全提示 |
 | 系统 / 错误 / 命令结果 / `Sender == "系统"` | `SystemLine` | 居中纯文本 + 时间戳，**无气泡** |
+
+- **消息内链接可点击**：四个模板的正文都通过附加属性 `local:LinkifiedText.Text` 绑定，
+  由纯 C# 的 `LinkParser.Tokenize` 把文本切成普通片段与 `Hyperlink` 内联。只识别
+  `http://` / `https://` / `www.`（自动补 `https://`），CJK 字符与常见尾部标点会截断
+  URL，非 http(s) 协议保持纯文本。只设置 `NavigateUri`，由 WinUI 在默认浏览器打开，
+  不再挂 `Click` 以免打开两次；原文逐字符保留，复制 / tooltip / 审计文案不变。
+- **命令消息双气泡**：`ChatEntryKind` 末尾追加 `CommandRequest` / `CommandReceived`
+  （旧枚举数值不变），`ChatEntry.CommandRequest(...)` / `CommandReceived(origin, target, command)`
+  带结构化 `Target` / `Command` / `Origin`。`ChatSession.SendCommandAsync` 与 `HandleCommand`
+  分别使用这两个工厂，审计文案仍是 `[命令] 发送给 X: ...` / `[收到命令] ...`。分类规则集中在
+  不依赖 WinUI 的 `ChatTimeline.Classify`（返回 `BubbleCategory`），`ChatTemplateSelector`
+  只做模板映射，便于无界面测试；`IsSystemLine` 显式排除这两个类别。D1 安全策略不变：
+  命令仍**永不执行**，气泡只做展示。
+
+- **排查：为什么收到的命令曾经不是气泡** —— 旧 `HandleCommand` 用
+  `ChatEntry.Chat(UiText.System, "[收到命令] ...")` 发射：`Kind == Chat` 看似该走气泡，
+  但 `ChatTimeline.IsSystemLine` 还有一条 `Sender == "系统"` 的兜底规则，于是被判为
+  `BubbleCategory.System`，落到 `SystemLine` 模板（居中纯文本、无气泡、无独立气泡时间戳、
+  不参与入场动画）；紧随其后的 `Error(RemoteCommandDisabled)` 同样是系统行，所以整组
+  命令提示都以居中文字呈现，与右侧已有的暖色请求气泡不一致。
+  排查顺序：① 在 Core 的 `MessageAdded` 打印 `entry.Kind` / `entry.Sender` / `entry.Text`；
+  ② 调 `ChatTimeline.Classify(entry, 本地用户名)` 看返回的 `BubbleCategory`；
+  ③ 检查 `BubbleSelector` 是否绑定 `ReceivedCommandTemplate`、XAML 资源键是否存在；
+  ④ 检查 `IsSystemLine` 与 `KindToBrushConverter` 是否把新类别重新归类 / 吞掉配色；
+  ⑤ 用 `FILESA_UI_PREVIEW=1` 亮 / 暗截图核对模板与主题色。
+  修复：`HandleCommand` 改用 `ChatEntry.CommandReceived`，新增左侧冷色终端气泡；
+  Core 仍保留 `Error` 事件供日志与审计，UI 用 `ChatTimeline.IsRedundantCommandNotice`
+  只折叠「紧随命令气泡」的那一条重复提示，完整安全文案改由气泡底部显示。FCCH 帧在服务端
+  转发时透传 `User` 作为发起方，legacy 帧无该字段时显示「其他用户」。
 
 - **顺序与时间线**：仍按 `ObservableCollection.Add` 的追加顺序渲染，不重排；聊天气泡显示
   `HH:mm`，tooltip 为 `yyyy-MM-dd HH:mm:ss`。新消息只在用户原本停留在底部时自动滚动，
@@ -184,12 +216,16 @@ Core / 协议层零改动：
 - **保持不变**：消息文本、追加顺序、颜色语义、右键复制所选消息、清空记录、系统通知、
   用户列表与全部网络行为。
 
-**验证**：整解决方案构建 0 警告 0 错误、**31/31** 测试回归通过（T21–T27 覆盖同分钟分组、
-跨分钟 / 跨日边界、聊天消息打断分组、分组动态收敛、动画标记唯一与不重播）；用 `PrintWindow`
-实机截取亮色 1100×760、暗色 600×640 等窗口，截图可见顶部 3 条系统消息共用 1 个 18:01、
-第二组 2 条共用 1 个 18:06，聊天气泡时间、左右对齐、长文本换行与窄屏布局均保持正常；
-`FILESA_UI_APPEND=1` 运行时自检输出 `animatedContainers=1 / pending=0 / messages=12`，
-证明追加一条消息时只有那一条气泡播放动画。
+**验证**：整解决方案构建 0 警告 0 错误、**40/40** 测试回归通过（T21–T27 覆盖同分钟分组、
+跨分钟 / 跨日边界、聊天消息打断分组、分组动态收敛、动画标记唯一与不重播；T36–T38
+覆盖 URL 切分不丢字符 / 标点截断 / CJK 终止 / 非 http 协议、CommandRequest 分类与属性、
+真实 `SendCommandAsync` 只产生请求条目且无命令结果；**T39** 复现旧 `Chat + Sender == 系统`
+被判为 `System` 的缺陷并验证 `CommandReceived` 分类、结构化字段、折叠规则的边界；
+**T40** 用真实 FCCH `COMMAND` 帧经服务端转发，验证接收端产生 `CommandReceived` 且
+`Origin = attacker`、`Target / Command` 完整、无 `CommandResult`）；用 `PrintWindow` 实机截取
+亮色、暗色 1100×760 窗口，链接显示为带下划线的强调色文字，左右两个命令气泡的标题 /
+等宽正文 / 完整安全提示齐全且配色可区分；`FILESA_UI_APPEND=1` 运行时自检输出
+`animatedContainers=1 / pending=0 / messages=15`，证明追加一条消息时只有那一条气泡播放动画。
 
 可视化自检开关（默认关闭，仅调试用，不联网、不启动发现）：
 
@@ -197,7 +233,8 @@ Core / 协议层零改动：
 FILESA_UI_PREVIEW=1 FILESA_UI_THEME=Light FILESA_UI_SIZE=600x640 FilesaCOChat.WinUI.exe
 ```
 
-`FILESA_UI_PREVIEW=1` 注入示例时间线（含同分钟连续系统消息，便于核对时间戳分组）；
+`FILESA_UI_PREVIEW=1` 注入示例时间线（含同分钟连续系统消息、一条带两个 URL 的消息、
+一条发出的命令行请求和一条收到的命令帧，便于核对时间戳分组 / 链接 / 两种命令气泡）；
 `FILESA_UI_THEME` 为 `Light` / `Dark`；`FILESA_UI_SIZE` 指定窗口尺寸；
 `FILESA_UI_APPEND=1` 在预览加载后再追加一条消息以实测单条动画；布局尺寸 / 分组标记写到
 `%TEMP%/fc-ui-metrics.txt`，动画触发次数写到 `%TEMP%/fc-ui-animation.txt`。
@@ -224,12 +261,37 @@ FILESA_UI_PREVIEW=1 FILESA_UI_THEME=Light FILESA_UI_SIZE=600x640 FilesaCOChat.Wi
 
 **登录页窗口尺寸**（`ApplyLoginWindowSize` / `ApplyChatWindowSize`）：
 
-- 登录页是紧凑卡片，窗口宽度固定为 420 DIP；高度按 `LoginPanel.Measure` 的
-  `DesiredSize` 计算（含内边距，夹在 420–720 DIP 之间），因此刚好容纳 logo、标题、
-  用户名、登录按钮与状态文字，不再留大片空白。
+- 登录页窗口宽度固定为 420 DIP；**高度在启动时测量一次后冻结**（`_loginWindowHeight`
+  缓存），因此「搜索LAN」与「连接指定频道」两个选项卡来回切换时窗口尺寸不变
+  （100% DPI 实测均为 436×636 物理像素）。
+- **卡片宽度同样固定**：`LoginPanel` 是 `HorizontalAlignment="Center"` 的 `Grid`，若不给
+  `Width`，它会「收缩包裹」到当前可见子项的最大自然宽度。定向模式里
+  `ChannelAddressBox` 的长占位文字「例如 192.168.1.8 或 192.168.1.8:11451」、
+  端口提示以及更长的状态文字把卡片撑到 300 DIP，而 LAN 模式只有 240 DIP；所有
+  `HorizontalAlignment="Stretch"` 的 `TextBox` 跟着父级变化，于是实测输入框分别是
+  **252 px（定向）与 192 px（LAN）**，且都以窗口中线 218 为中心。构造函数在执行任何
+  测量前把 `LoginPanel.Width` 固定为 `LoginCardWidth = 300` DIP（= 252 内容 +
+  左右各 24 padding，正是定向模式原本的正确宽度），并给两个字段组与四个 `TextBox`
+  显式写上 `HorizontalAlignment="Stretch"`；长状态文字改为换行而不是撑宽卡片。
+  修复后两种模式（含来回切换）输入框恒为 `x=92..343`、宽 252 px。
+- 两种模式的字段组放在同一个 `Grid LoginFieldsHost` 单元中，`FreezeLoginFieldSlot()`
+  在显示前按**真实内容宽度** `LoginContentWidth = 252` DIP 分别测量两个组，取较高者
+  写入 `MinHeight`（下限 210 DIP，防止测量异常导致定向模式字段被裁切）；`LanFields`
+  在该固定槽位内垂直居中，登录按钮 / 进度条 / 状态文字在两种模式下保持同一 Y 位置。
+  测量宽度必须与实际卡片宽度一致，否则在 252 DIP 下会换行的提示会被按 372 DIP
+  低估高度而裁切。`ApplyLoginMode` 已删除原先的重新测高与 resize。
 - 登录期间窗口不可缩放 / 最大化；`LoggedIn` 变为 true 后恢复可缩放并切到聊天尺寸
   （1100×760，按工作区减去边距收敛，避免小屏 / 高缩放下超出屏幕）。
 - 所有尺寸都做 DPI 换算，`LoginStatus` 允许换行，避免长状态文字被裁切。
+
+**同类问题的排查顺序**（本次定位输入框宽度不一致时实际采用的步骤）：
+① 分别截取两个选项卡的**完整窗口**，用像素扫描找出输入框背景矩形的左右边界
+（本次为 LAN `122..313`、定向 `92..343`，中心都是 218 → 说明不是某个控件的对齐或
+`Margin` 偏了，而是整张卡片在伸缩）；② 检查登录卡片自身的对齐与宽度约束，确认它是
+`Center` + 无 `Width` 的收缩包裹容器；③ 找出各模式下**可见**子项里最宽的那个
+（长 `PlaceholderText` / 提示文字 / 状态文字都会参与 `DesiredSize` 竞争）；
+④ 检查 `TextBox` 是否 `Stretch` —— 它不会自己定宽，只会跟随父级；
+⑤ 固定父级宽度后再实机像素复测，并额外验证「切过去再切回来」不产生漂移。
 
 **主题切换与持久化**：
 
@@ -257,7 +319,7 @@ exe 内嵌图标一致（`ApplicationIcon` 仍保留）。
 **窄屏**：在线用户列表是上述操作的唯一入口，因此保留到 660 px；窗口窄于 660 px 时列表隐藏
 （与改版前一致），此时无法发起按用户操作，聊天与文件接收不受影响。
 
-**验证**：整解决方案 **0 警告 0 错误**、**31/31** 用例通过（T28–T31 覆盖默认值、主题与界面
+**验证**：整解决方案 **0 警告 0 错误**、**35/35** 用例通过（T28–T31 覆盖默认值、主题与界面
 偏好往返、PSK 不落盘、损坏文件回退）；实机截图（`.workbuddy/analysis/ui-v2-*.png`）：
 
 - 登录窗口 **436×459**，内容完整、无大块空白，深色主题下标题栏同步变深；
@@ -312,6 +374,28 @@ VerticalOffset <= 24` DIP），因此追加消息导致的滚动范围增长不�
    渲染帧执行，此时 extent 还是旧值，会停在新消息上方；一次性重试只在「没到底」时触发，
    不会和用户抢滚动条。
 
+## 登录页双模式：搜索LAN / 连接指定频道
+
+用户名输入框上方新增 `SelectorBar` 选项卡（默认选中「搜索LAN」）：
+
+| 模式 | 显示字段 | 点击按钮后的行为 |
+| --- | --- | --- |
+| 搜索LAN | 原有的「用户名」输入框 | `_vm.LoginAsync` → `ChatApplication.LoginAsync`：广播/扫描发现 → 加入已有房间，找不到则创建房间。**布局与行为与旧版完全一致** |
+| 连接指定频道 | 「地址:端口」+「用户名」两个输入框 | `_vm.ConnectChannelAsync` → `ChatApplication.ConnectChannelAsync`：跳过发现、不创建房间，直接向该地址发起 TCP JOIN |
+
+- 界面状态切换由 `ApplyLoginMode()` 统一处理：字段组 `Visibility`、按钮文案（登录 / 连接）、
+  状态提示、以及「窗口按登录卡片内容测量」的高度重算（LAN 436×497，定向 436×594，
+  切回 LAN 会缩回）。用户名在两种模式间切换时会被带到另一侧（不覆盖已填内容），
+  连接进行中选项卡暂时禁用。
+- **端口缺省**：`DirectEndpoint.TryParse` 接受 `host`、`host:`（都视为未填端口）、
+  `host:port`、`[IPv6]:port` 与裸 IPv6；缺省时回落到 `ProtocolOptions.DefaultChatPort`
+  （11451）。非法端口/空地址会弹对话框说明原因，不会发起连接。
+- 解析出的端口写进 `ProtocolOptions.ChatPort`，因此 JOIN、后续迁移重连都使用同一端口；
+  切回「搜索LAN」时 `LoginAsync` 把端口恢复为构造时配置的值，避免定向连接污染发现流程。
+  PSK/FCCH 策略与 LAN 路径相同：先做能力探测，启用 PSK 时拒绝明文房间（T34、T35 覆盖）。
+- 定向连接同样会触发 `AppStatus.Connected` → 登录卡片切换为聊天界面；失败时按钮重新可用，
+  状态行显示「连接失败: 地址:端口」。
+
 ## 保持不变的契约
 
 - **端口**：TCP 11451 聊天/控制、UDP 11452 广播发现、TCP 11450 文件传输（新增 UDP 11453
@@ -346,12 +430,14 @@ VerticalOffset <= 24` DIP），因此追加消息导致的滚动范围增长不�
 | D8 | 更新链路不校验 | 强制 HTTPS、校验 tag_name 形状与发布页域名 | T08 |
 | D9 | 线程安全边界 | 所有事件单点经 DispatcherQueue 编组，状态加锁 | T19 |
 
-**验证结果**：整解决方案构建 0 警告 0 错误；`31/31` 用例通过（原 20 项协议 / 安全 / 网络 +
-显示修复 T21–T27 + 设置与主题 T28–T31）；Debug 与 Release 两次启动
+**验证结果**：整解决方案构建 0 警告 0 错误；`35/35` 用例通过（原 20 项协议 / 安全 / 网络 +
+显示修复 T21–T27 + 设置与主题 T28–T31 + 定向连接 T32–T35）；Debug 与 Release 两次启动
 冒烟均得到主窗口 `Filesa COChat 7.0 · WinUI 3`（Responding=True，无运行时弹窗）；
 Release `dotnet publish` 成功、分发 zip 266 项校验通过；气泡界面在亮 / 暗主题、
 1200×820 与 600×640 两种尺寸、Debug 与 Release 发布目录均实机截图核验通过；
-用户列表右键菜单、侧边栏设置、登录页设置入口与主题持久化同样实机截图核验。
+用户列表右键菜单、侧边栏设置、登录页设置入口与主题持久化同样实机截图核验；
+登录页双选项卡在 Debug / Release 均实机切换核对（`.workbuddy/analysis/ui-v7-login-*.png`），
+含端口省略时状态行显示 `连接失败: 127.0.0.1:11451`。
 
 ## 需要注意的行为变更与限制
 

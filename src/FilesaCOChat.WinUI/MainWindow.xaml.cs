@@ -42,6 +42,34 @@ public sealed partial class MainWindow : Window
     private const int ChatWindowHeight = 760;
 
     /// <summary>
+    /// Fixed width (DIP) of the login card. LoginPanel is centre-aligned, so
+    /// without an explicit Width it shrink-wraps to its widest visible child:
+    /// the long "地址:端口" placeholder / port hint made the card 300 DIP wide in
+    /// channel mode but only 240 DIP in LAN mode (content widths 252 vs 192),
+    /// and every stretched TextBox followed suit. Pinning this single value makes
+    /// both tabs share one layout width; longer status text wraps instead of
+    /// widening the card. 300 = 252 content + 24 padding on each side, which is
+    /// exactly the channel tab's previous (correctly sized) appearance.
+    /// </summary>
+    private const double LoginCardWidth = 300;
+
+    /// <summary>LoginPanel.Padding is 24 DIP on each horizontal side.</summary>
+    private const double LoginCardPaddingX = 48;
+
+    /// <summary>Width available to the login card's children.</summary>
+    private const double LoginContentWidth = LoginCardWidth - LoginCardPaddingX;
+
+    /// <summary>Fallback for the shared login field slot if measurement fails.</summary>
+    private const double LoginFieldsFallbackHeight = 210;
+
+    /// <summary>
+    /// Login window height, measured once and then frozen. Previously every tab
+    /// switch re-measured the card and resized the window (436x497 vs 436x594);
+    /// caching the taller-mode height keeps one fixed size for both tabs.
+    /// </summary>
+    private double? _loginWindowHeight;
+
+    /// <summary>
     /// Distance (DIP) below which the message pane counts as "at the bottom".
     /// Absorbs fractional layout offsets so a 0.5 px gap does not stop the
     /// auto-scroll.
@@ -59,6 +87,7 @@ public sealed partial class MainWindow : Window
     private bool _noticeDismissed;
     private string? _notifiedVersion;
     private string? _previewUsername;
+    private bool _directLoginMode;
     private int _entranceAnimations;
     private SettingsWindow? _settingsWindow;
 
@@ -118,6 +147,25 @@ public sealed partial class MainWindow : Window
         ApplyWindowIcon();
         StatusLabel.Text = _vm.Status;
 
+        // Login mode tabs: the hints show the real default port rather than a
+        // hard-coded string, and the LAN tab is selected by default so the
+        // original login page is byte-for-byte the same layout/flow.
+        PortHint.Text = $"端口留空时使用默认端口 {DirectEndpoint.DefaultPort}";
+        ChannelAddressBox.PlaceholderText =
+            $"例如 192.168.1.8 或 192.168.1.8:{DirectEndpoint.DefaultPort}";
+        // Pin the card width BEFORE any measure or tab switch. A centre-aligned
+        // Grid without a Width shrink-wraps to its widest visible child, so the
+        // channel tab's longer placeholder used to widen every TextBox from 192
+        // to 252 DIP. With the width fixed, both tabs lay out at one width and
+        // the status line wraps instead of growing the card.
+        LoginPanel.Width = LoginCardWidth;
+        // Freeze the shared field slot before the first window sizing, so both
+        // tabs produce the same DesiredSize from the very first frame.
+        FreezeLoginFieldSlot();
+        LoginModeBar.SelectedItem = LanModeItem;
+        LoginModeBar.SelectionChanged += (_, _) => ApplyLoginMode();
+        ApplyLoginMode(syncUsername: false);
+
         // The login page is a compact card, so the window is resized to exactly
         // that content instead of leaving a large empty canvas around it. After a
         // successful login the chat layout takes over and the window grows.
@@ -163,6 +211,8 @@ public sealed partial class MainWindow : Window
                 break;
             case nameof(MainViewModel.Busy):
                 SearchProgress.Visibility = _vm.Busy ? Visibility.Visible : Visibility.Collapsed;
+                // Don't let the user flip modes halfway through a connect attempt.
+                LoginModeBar.IsEnabled = !_vm.Busy;
                 break;
             case nameof(MainViewModel.LoggedIn):
                 if (_vm.LoggedIn)
@@ -332,6 +382,18 @@ public sealed partial class MainWindow : Window
         // background, which is #2B2B2B (dark) / #F9F9F9 (light).
         SetBrush("OtherBubbleBrush", dark ? (0x3A, 0x3C, 0x42) : (0xEC, 0xEE, 0xF2));
         SetBrush("OtherBubbleBorderBrush", dark ? (0x5A, 0x5E, 0x66) : (0xC9, 0xCF, 0xD7));
+        // Command request bubble: warm terminal palette, readable in both themes.
+        SetBrush("CommandBubbleBrush", dark ? (0x3A, 0x33, 0x28) : (0xFF, 0xF6, 0xE9));
+        SetBrush("CommandBubbleBorderBrush", dark ? (0x8A, 0x6D, 0x3F) : (0xD9, 0xA8, 0x5C));
+        SetBrush("CommandHeaderBrush", dark ? (0x4A, 0x3F, 0x2D) : (0xF7, 0xE3, 0xC0));
+        SetBrush("CommandHeaderTextBrush", dark ? (0xF0, 0xD8, 0xA8) : (0x6B, 0x4A, 0x12));
+        SetBrush("CommandBodyBrush", dark ? (0xF2, 0xE8, 0xD8) : (0x3A, 0x2A, 0x12));
+        // Received command bubble: cool terminal palette, distinct from outgoing.
+        SetBrush("ReceivedCommandBubbleBrush", dark ? (0x26, 0x30, 0x3A) : (0xEA, 0xF3, 0xFB));
+        SetBrush("ReceivedCommandBubbleBorderBrush", dark ? (0x4A, 0x72, 0x94) : (0x7E, 0xA9, 0xCE));
+        SetBrush("ReceivedCommandHeaderBrush", dark ? (0x33, 0x47, 0x5A) : (0xD6, 0xE8, 0xF7));
+        SetBrush("ReceivedCommandHeaderTextBrush", dark ? (0xCD, 0xE4, 0xF7) : (0x1B, 0x4B, 0x72));
+        SetBrush("ReceivedCommandBodyBrush", dark ? (0xEA, 0xF3, 0xFA) : (0x16, 0x32, 0x4A));
     }
 
     private void SetBrush(string key, (int R, int G, int B) rgb)
@@ -392,26 +454,66 @@ public sealed partial class MainWindow : Window
 
     // ---- window sizing ---------------------------------------------------
     /// <summary>
-    /// Sizes the window to the login card. The height comes from measuring the
-    /// login panel at the fixed compact width, so there is no large blank canvas
-    /// and no clipped status text. The window is locked in this state because the
-    /// login page has no use for extra room.
+    /// Reserves one fixed-height slot for the two login field groups. Both are
+    /// briefly made measurable, the taller one wins, and the result is written to
+    /// LoginFieldsHost.MinHeight. From then on LoginPanel.DesiredSize.Height is
+    /// identical in LAN and channel mode, so no code path needs to resize the
+    /// window when the SelectorBar selection changes.
+    /// <para>
+    /// The width side of the same slot is fixed by LoginPanel.Width (see
+    /// LoginCardWidth); measurement uses that REAL content width rather than the
+    /// full 420 DIP login window, otherwise a hint that wraps at 252 DIP would
+    /// report a too-small height and be clipped by the frozen MinHeight.
+    /// </para>
+    /// </summary>
+    private void FreezeLoginFieldSlot()
+    {
+        const double contentWidth = LoginContentWidth;
+
+        double MeasureFields(FrameworkElement fields)
+        {
+            var previous = fields.Visibility;
+            fields.Visibility = Visibility.Visible;
+            try
+            {
+                fields.Measure(new Windows.Foundation.Size(contentWidth, double.PositiveInfinity));
+                return fields.DesiredSize.Height;
+            }
+            finally { fields.Visibility = previous; }
+        }
+
+        var tallest = Math.Max(MeasureFields(LanFields), MeasureFields(ChannelFields));
+        // The XAML floor is a hard lower bound: even if a collapsed element ever
+        // reports a zero DesiredSize (or the OS text scale shrinks the measured
+        // value), the direct-connect group must never be clipped.
+        var measured = double.IsFinite(tallest) ? Math.Ceiling(tallest) : 0;
+        LoginFieldsHost.MinHeight = Math.Max(LoginFieldsFallbackHeight, measured);
+    }
+
+    /// <summary>
+    /// Sizes the window to the login card. The height is measured ONCE (after
+    /// FreezeLoginFieldSlot) and cached; later calls - including the Loaded
+    /// re-measure and any tab switch - reuse the same value. This is what keeps
+    /// the login window at a constant size regardless of the selected tab.
     /// </summary>
     private void ApplyLoginWindowSize()
     {
         try
         {
-            LoginPanel.Measure(new Windows.Foundation.Size(LoginWindowWidth, double.PositiveInfinity));
-            var height = LoginPanel.DesiredSize.Height;
-            if (double.IsNaN(height) || double.IsInfinity(height) || height <= 0) height = 480;
-            height = Math.Clamp(height + 8, 420, 720);
+            if (_loginWindowHeight is null)
+            {
+                LoginPanel.Measure(new Windows.Foundation.Size(LoginWindowWidth, double.PositiveInfinity));
+                var height = LoginPanel.DesiredSize.Height;
+                if (double.IsNaN(height) || double.IsInfinity(height) || height <= 0) height = 480;
+                _loginWindowHeight = Math.Clamp(height + 8, 420, 720);
+            }
 
             if (AppWindow.Presenter is OverlappedPresenter presenter)
             {
                 presenter.IsResizable = false;
                 presenter.IsMaximizable = false;
             }
-            ResizeClient(LoginWindowWidth, height);
+            ResizeClient(LoginWindowWidth, _loginWindowHeight.Value);
             CenterOnScreen();
         }
         catch { /* presenter restrictions are best effort */ }
@@ -689,12 +791,25 @@ public sealed partial class MainWindow : Window
             "TCP 11450 传输文件，接收方会校验 SHA-256 哈希。即使窗口被拉窄，气泡也应该按可用宽度折行。",
             ChatEntryKind.Chat, 200);
         Add("我", "短消息", ChatEntryKind.Chat, 260);
+        // Visual smoke case for clickable links (FILESA_UI_PREVIEW=1).
+        Add("alice", "文档在 https://learn.microsoft.com/windows/apps/ ，备用 www.example.com。",
+            ChatEntryKind.Chat, 280);
         // A second group (separated from the first by chat lines), and a lone
-        // error line: each shows its own single timestamp.
+        // error line: each shows its own single timestamp. The error is an
+        // unrelated one on purpose - the command refusal notice now lives
+        // inside the two terminal bubbles below, not in a centred line.
         Add(UiText.System, "bob 加入了聊天室", ChatEntryKind.System, 320);
         Add(UiText.System, "已同步在线用户", ChatEntryKind.System, 322);
         Add("bob", "收到", ChatEntryKind.Chat, 380);
-        Add(UiText.System, UiText.RemoteCommandDisabled, ChatEntryKind.Error, 440);
+        Add(UiText.System, "文件接收服务未启动，已忽略该请求", ChatEntryKind.Error, 440);
+        // Terminal bubbles, kept last so a scroll-to-bottom screenshot shows
+        // both sides: my outgoing request (right, warm) and a COMMAND frame
+        // received from a peer (left, cool). The duplicate Error notice is not
+        // added here because the real append path collapses it into the bubble.
+        _vm.AddPreviewLine(ChatEntry.CommandRequest("我", "alice", "dir C:\\Users") with
+        { Timestamp = t0.AddSeconds(460) });
+        _vm.AddPreviewLine(ChatEntry.CommandReceived("bob", "我", "cmd /c whoami") with
+        { Timestamp = t0.AddSeconds(465) });
 
         _vm.RefreshTimeline(); // bulk load: apply grouping, no entrance animation
 
@@ -734,6 +849,36 @@ public sealed partial class MainWindow : Window
     }
 
     // ---- login / send ----------------------------------------------------
+    /// <summary>
+    /// Switches the login card between LAN discovery and a directed channel.
+    /// Only the field groups, the button label and the status hint change; the
+    /// button, progress bar and status line are shared. The two groups occupy
+    /// one fixed-height slot, so the window is deliberately NOT resized here.
+    /// </summary>
+    private void ApplyLoginMode(bool syncUsername = true)
+    {
+        var wasDirect = _directLoginMode;
+        _directLoginMode = ReferenceEquals(LoginModeBar.SelectedItem, ChannelModeItem);
+        if (syncUsername && wasDirect != _directLoginMode)
+        {
+            // Carry the typed name across tabs, but never overwrite a non-empty one.
+            if (_directLoginMode && string.IsNullOrEmpty(ChannelUsernameBox.Text))
+                ChannelUsernameBox.Text = UsernameBox.Text;
+            else if (!_directLoginMode && string.IsNullOrEmpty(UsernameBox.Text))
+                UsernameBox.Text = ChannelUsernameBox.Text;
+        }
+
+        LanFields.Visibility = _directLoginMode ? Visibility.Collapsed : Visibility.Visible;
+        ChannelFields.Visibility = _directLoginMode ? Visibility.Visible : Visibility.Collapsed;
+        LoginButton.Content = _directLoginMode ? "连接" : "登录";
+        LoginStatus.Text = _directLoginMode
+            ? $"定向连接：地址可省略端口（默认 {DirectEndpoint.DefaultPort}）"
+            : _vm.Status;
+        // No re-measure / no resize: LoginPanel.Width and LoginFieldsHost.MinHeight
+        // were frozen in the constructor, so both modes have exactly the same
+        // desired width AND height (only Visibility / labels / hints change).
+    }
+
     private async void Login_Click(object sender, RoutedEventArgs e) => await DoLoginAsync();
 
     private async void UsernameBox_KeyDown(object sender, KeyRoutedEventArgs e)
@@ -741,8 +886,14 @@ public sealed partial class MainWindow : Window
         if (e.Key == VirtualKey.Enter) await DoLoginAsync();
     }
 
+    private async void DirectInput_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == VirtualKey.Enter) await DoLoginAsync();
+    }
+
     private async Task DoLoginAsync()
     {
+        if (_directLoginMode) { await DoConnectChannelAsync(); return; }
         var name = UsernameBox.Text.Trim();
         if (string.IsNullOrEmpty(name))
         {
@@ -752,6 +903,31 @@ public sealed partial class MainWindow : Window
         }
         LoginButton.IsEnabled = false;
         var ok = await _vm.LoginAsync(name);
+        if (!ok) LoginButton.IsEnabled = true;
+    }
+
+    /// <summary>
+    /// 连接指定频道: parse address[:port] (omitted port -> 11451), validate the
+    /// username and dial the endpoint directly. No LAN discovery and no room
+    /// creation in this mode.
+    /// </summary>
+    private async Task DoConnectChannelAsync()
+    {
+        var name = ChannelUsernameBox.Text.Trim();
+        if (string.IsNullOrEmpty(name))
+        {
+            await Dialogs.Info(RootGrid.XamlRoot, UiText.Warning, UiText.MustEnterUsername,
+                RootGrid.RequestedTheme).ShowAsync();
+            return;
+        }
+        if (!DirectEndpoint.TryParse(ChannelAddressBox.Text, out var endpoint, out var error))
+        {
+            await Dialogs.Info(RootGrid.XamlRoot, UiText.Warning, error,
+                RootGrid.RequestedTheme).ShowAsync();
+            return;
+        }
+        LoginButton.IsEnabled = false;
+        var ok = await _vm.ConnectChannelAsync(name, endpoint);
         if (!ok) LoginButton.IsEnabled = true;
     }
 

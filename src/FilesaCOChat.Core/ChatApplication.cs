@@ -15,6 +15,8 @@ public sealed class ChatApplication : IAsyncDisposable
     private readonly FileTransferService _files;
     private readonly UpdateChecker _updates;
     private readonly CancellationTokenSource _lifetime = new();
+    /// <summary>Port configured at construction; LAN login always returns to it.</summary>
+    private readonly int _configuredChatPort;
     private ChatSession? _session;
     private string _username = "";
     private bool _responderStarted;
@@ -47,6 +49,7 @@ public sealed class ChatApplication : IAsyncDisposable
     {
         Settings = settings ?? new AppSettings();
         _options = options ?? new ProtocolOptions();
+        _configuredChatPort = _options.ChatPort;
         if (Settings.PreSharedKey is not null) _options.PreSharedKey = Settings.PreSharedKey;
         _discovery = new DiscoveryService(_options);
         _files = new FileTransferService(_options);
@@ -82,6 +85,9 @@ public sealed class ChatApplication : IAsyncDisposable
             return false;
         }
         _username = username.Trim();
+        // A previous directed connection may have switched the chat port; LAN
+        // discovery must always use the configured (default 11451) port again.
+        _options.ChatPort = _configuredChatPort;
         StatusChanged?.Invoke(new StatusChangedArgs(AppStatus.Searching, UiText.Searching));
         EmitSys(UiText.WelcomePrefix + _username + UiText.Welcome);
 
@@ -124,6 +130,34 @@ public sealed class ChatApplication : IAsyncDisposable
     {
         _username = username.Trim();
         return await JoinAsync(serverIp, framed, ct);
+    }
+
+    /// <summary>
+    /// 连接指定频道: dial host:port directly, skipping LAN discovery entirely.
+    /// The parsed port becomes the session's chat port (also used if this client
+    /// is later promoted to server), and the capability probe keeps PSK/FCCH
+    /// policy identical to the LAN path.
+    /// </summary>
+    public async Task<bool> ConnectChannelAsync(string username, DirectEndpoint endpoint,
+                                                CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            Emit(ChatEntry.Error(UiText.Warning + ": " + UiText.MustEnterUsername));
+            return false;
+        }
+        _username = username.Trim();
+        _options.ChatPort = endpoint.Port;
+        StatusChanged?.Invoke(new StatusChangedArgs(AppStatus.Connecting, endpoint.ToString()));
+        EmitSys(UiText.WelcomePrefix + _username + UiText.Welcome);
+
+        var framed = await _discovery.ProbeCapabilityAsync(endpoint.Host, ct);
+        if (SecureFrameCodec.IsSecure(_options.PreSharedKey) && !framed)
+        {
+            Emit(ChatEntry.Error("已启用预共享密钥，拒绝加入不支持 FCCH 的 5.1 明文房间"));
+            return false;
+        }
+        return await JoinAsync(endpoint.Host, framed, ct);
     }
 
     public async Task<bool> JoinAsync(string serverIp, bool framed, CancellationToken ct = default)

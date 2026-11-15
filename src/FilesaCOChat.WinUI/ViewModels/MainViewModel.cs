@@ -69,7 +69,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
         App.MessageAdded += entry => Dispatch(() =>
         {
             AppendMessage(entry);
-            if (Settings.NotificationsEnabled && entry.Kind == ChatEntryKind.Chat &&
+            // CommandReceived is no longer a Chat kind (it has its own bubble),
+            // but it is still a peer message: keep the same minimise-only toast
+            // the old Chat + Sender="系统" transcript used to produce.
+            if (Settings.NotificationsEnabled &&
+                entry.Kind is ChatEntryKind.Chat or ChatEntryKind.CommandReceived &&
                 !string.Equals(entry.Sender, App.Username, StringComparison.Ordinal))
                 NotificationRequested?.Invoke(entry);
         });
@@ -108,6 +112,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
     /// </summary>
     private void AppendMessage(ChatEntry entry)
     {
+        // Core emits a separate Error line with the refusal wording immediately
+        // after each command entry (kept for logs / head-less assertions). Both
+        // terminal bubbles already render UiText.RemoteCommandDisabled in their
+        // footer, so suppress the duplicate centred line at the presentation
+        // layer only. The guard requires the preceding line to be a command
+        // bubble, so unrelated security errors are still shown.
+        var previous = Messages.Count > 0 ? Messages[Messages.Count - 1].Entry : null;
+        if (ChatTimeline.IsRedundantCommandNotice(entry, previous)) return;
+
         var line = new ChatLine(entry);
         // Raise the one-shot flag BEFORE the item enters the collection: WinUI
         // may prepare or recycle a container (and fire DataContextChanged)
@@ -138,6 +151,27 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             var ok = await App.LoginAsync(username);
             if (!ok) { Busy = false; Status = UiText.MustEnterUsername; }
+            return ok;
+        }
+        catch (Exception ex)
+        {
+            Dispatch(() => { Busy = false; Status = "错误: " + ex.Message; });
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 连接指定频道: same lifecycle as <see cref="LoginAsync"/> but dials the
+    /// parsed address:port directly. No discovery / no room creation.
+    /// </summary>
+    public async Task<bool> ConnectChannelAsync(string username, DirectEndpoint endpoint)
+    {
+        Busy = true;
+        Status = "正在连接 " + endpoint + "...";
+        try
+        {
+            var ok = await App.ConnectChannelAsync(username, endpoint);
+            if (!ok) { Busy = false; Status = "连接失败: " + endpoint; }
             return ok;
         }
         catch (Exception ex)

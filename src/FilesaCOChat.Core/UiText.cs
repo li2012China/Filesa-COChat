@@ -56,6 +56,8 @@ public static class UiText
     public const string RemoteCommandDisabled =
         "[安全] 远程命令执行已在 WinUI3 版禁用，命令未执行。";
     public const string ReceivedCommand = "[收到命令] ";
+    /// <summary>Fallback when a legacy COMMAND frame carries no origin username.</summary>
+    public const string UnknownCommandSender = "其他用户";
 
     /// <summary>D3 fix: local input that starts with a reserved control token is refused.</summary>
     public const string ReservedPrefixBlocked =
